@@ -1166,3 +1166,47 @@ input::placeholder {
     padding: 4px 8px;
   }
 }
+/* ─── Calendar Skeleton ─── */
+.calendar-skeleton {
+  width: 100%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.calendar-skeleton-header {
+  height: 60px;
+  background: var(--slate-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.calendar-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--card-border);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.calendar-skeleton-cell {
+  background: var(--card-bg);
+  height: 120px;
+}
+
+.calendar-data-loading {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

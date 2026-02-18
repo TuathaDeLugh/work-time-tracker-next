@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: worktracker-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Use the service name "db" for the database host within the docker network
+      DATABASE_URL: postgresql://umangsailor:Umang6Sailor@db:5432/worktracker?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: work-time-tracker-super-secret-key-change-in-production
+    depends_on:
+      - db
+    networks:
+      - worktracker-network
+
+  db:
+    container_name: worktracker-db
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: umangsailor
+      POSTGRES_PASSWORD: Umang6Sailor
+      POSTGRES_DB: worktracker
+    ports:
+      # Expose port so local tools (like Prisma Studio or pgAdmin) can connect if needed
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - worktracker-network
+
+networks:
+  worktracker-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
