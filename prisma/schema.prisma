@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(cuid())
+  name       String?
+  email      String      @unique
+  password   String
+  workLogs   WorkLog[]
+  timerState TimerState?
+  createdAt  DateTime    @default(now())
+}
+
+model WorkLog {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime
+  punchIn      DateTime
+  punchOut     DateTime?
+  breakMinutes Int       @default(0)
+  totalHours   Float?
+  status       String    @default("active")
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId, date])
+}
+
+model TimerState {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive           Boolean  @default(false)
+  startTime          BigInt?
+  targetWorkMs       BigInt   @default(0)
+  targetBreakMs      BigInt   @default(0)
+  accumulatedWorkMs  BigInt   @default(0)
+  accumulatedBreakMs BigInt   @default(0)
+  lastStatusChange   BigInt?
+  status             String   @default("idle")
+  logs               Json     @default("[]")
+  updatedAt          DateTime @updatedAt
+}
