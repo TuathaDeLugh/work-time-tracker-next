@@ -252,6 +252,7 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
     punchToggle,
     addHistoricalBreak,
     resetDay,
+    clearToday,
     formatTime: ft,
   } = useWorkTimer(initialTimerState);
 
@@ -505,9 +506,27 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
                 )}
               </div>
 
-              <button onClick={resetDay} className="btn-danger">
-                <i className="ri-refresh-line" /> Reset Day
-              </button>
+              <div className="danger-zone">
+                <div className="danger-zone-header">
+                  <i className="ri-error-warning-line" />
+                  <span className="danger-zone-title">Danger Zone</span>
+                </div>
+                <div className="danger-actions">
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to clear ALL work logs for today? This cannot be undone.")) {
+                        clearToday();
+                      }
+                    }}
+                    className="btn-danger-outline"
+                  >
+                    <i className="ri-delete-bin-line" /> Clear Today
+                  </button>
+                  <button onClick={resetDay} className="btn-danger">
+                    <i className="ri-refresh-line" /> Reset Day
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* RIGHT: Session panel */}

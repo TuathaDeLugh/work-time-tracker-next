@@ -292,7 +292,7 @@ export default function CalendarClient({ initialEvents }: CalendarClientProps) {
               onRefresh={() => { fetchLogs(); setShowManualModal(false); }}
             />
           </div>
-        </d>
+        </div>
       )}
     </main>
   );

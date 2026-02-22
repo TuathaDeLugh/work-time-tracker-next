@@ -313,6 +313,22 @@ export function useWorkTimer(initialState: TimerState | null = null) {
         clearTimerStateFromBackend();
     }, []);
 
+    const clearToday = useCallback(async () => {
+        try {
+            const res = await fetch("/api/worklog/today", { method: "DELETE" });
+            if (res.ok) {
+                localStorage.removeItem("wtt_state_next");
+                setState(defaultState);
+                return { success: true };
+            }
+            const data = await res.json();
+            return { success: false, error: data.error || "Failed to clear today's data." };
+        } catch (err) {
+            console.error("clearToday error:", err);
+            return { success: false, error: "Network error." };
+        }
+    }, []);
+
     /**
      * Insert a historical break and immediately recalibrate all timer values.
      *
@@ -420,6 +436,7 @@ export function useWorkTimer(initialState: TimerState | null = null) {
         punchToggle,
         addHistoricalBreak,
         resetDay,
+        clearToday,
         formatTime,
         formatShortTime,
     };
