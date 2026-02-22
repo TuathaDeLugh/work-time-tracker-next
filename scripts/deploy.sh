@@ -17,7 +17,7 @@ echo -e "${GREEN}Docker is running.${NC}"
 
 # Stop any existing containers
 echo -e "${BLUE}Stopping existing containers...${NC}"
-docker-compose down
+docker compose down
 
 # Build key environment variables for internal use
 # Note: The .env file should be present for local development, but Docker uses values from docker-compose.yml
@@ -25,7 +25,7 @@ docker-compose down
 
 # Build and start containers
 echo -e "${BLUE}Building and starting containers...${NC}"
-docker-compose up -d --build
+docker compose up -d --build
 
 echo -e "${GREEN}Containers are up and running!${NC}"
 
@@ -36,8 +36,8 @@ sleep 10
 # Run Prisma Migrations
 echo -e "${BLUE}Running database migrations...${NC}"
 # We run migration inside the app container which has Prisma installed
-docker-compose exec app npx prisma migrate deploy
+docker compose exec app npx prisma migrate deploy
 
 echo -e "${GREEN}Database migrated successfully!${NC}"
 echo -e "${GREEN}Deployment Complete!${NC}"
-echo -e "Access the app at: ${BLUE}http://localhost:3000${NC}"
+echo -e "Access the app at: ${BLUE}http://localhost:3100${NC}"
