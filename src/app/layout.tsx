@@ -52,6 +52,11 @@ export default function RootLayout({
       <head>
         {/* Synchronously sets data-theme before first paint — no flash */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Remix Icons */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css"
+        />
       </head>
       <body>
         <SessionProvider>

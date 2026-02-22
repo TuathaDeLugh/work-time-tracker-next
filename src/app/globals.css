@@ -644,6 +644,10 @@ input::placeholder {
   max-width: 1100px;
 }
 
+.main-content.dashboard-page {
+  max-width: 1100px;
+}
+
 /* ═══════════════════════════════════════════════
    SETUP CARD
    ═══════════════════════════════════════════════ */
@@ -684,6 +688,165 @@ input::placeholder {
 }
 
 /* ═══════════════════════════════════════════════
+   DASHBOARD TWO-COLUMN GRID
+   ═══════════════════════════════════════════════ */
+
+/* Outer grid: timer card (left) + session panel (right) */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Session Panel (right column) ─── */
+.session-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.session-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.session-panel-icon {
+  font-size: 1.1rem;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.session-panel-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.session-panel-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+.session-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.session-panel-empty i {
+  font-size: 1.6rem;
+  opacity: 0.5;
+}
+
+.session-panel-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.session-panel-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--card-border);
+  transition: background var(--transition);
+  position: relative;
+}
+
+.session-panel-row:last-child {
+  border-bottom: none;
+}
+
+.session-panel-row:hover {
+  background: var(--accent-subtle);
+}
+
+.session-panel-row-active {
+  background: rgba(46, 174, 91, 0.04);
+}
+
+.session-panel-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.session-panel-row-active .session-panel-num {
+  background: var(--success);
+}
+
+.session-panel-times {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.session-panel-time {
+  font-size: 0.82rem;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.session-panel-arrow {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.session-panel-dur {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.session-panel-live-dot {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════
    DASHBOARD CARD
    ═══════════════════════════════════════════════ */
 .dashboard-card {
@@ -691,6 +854,7 @@ input::placeholder {
   flex-direction: column;
   gap: 24px;
 }
+
 
 .dash-header {
   display: flex;
@@ -937,6 +1101,14 @@ input::placeholder {
 
 .calendar-header h1 {
   text-align: left;
+}
+
+/* Right side: stats + Add Record button */
+.calendar-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .calendar-stats {
@@ -1630,4 +1802,670 @@ input::placeholder {
   background: var(--slate-bg);
   border-style: solid;
   color: var(--text-main);
+}
+
+/* ═══════════════════════════════════════════════
+   CALENDAR — TWO-COLUMN LAYOUT
+   ═══════════════════════════════════════════════ */
+.calendar-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .calendar-main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Day-cell summary (⏱ Xh  ☕ Ym) ─── */
+.fc-day-cell-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 2px 4px;
+  gap: 2px;
+  width: 100%;
+}
+
+.day-cell-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.dcs-work {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  white-space: nowrap;
+}
+
+.dcs-break {
+  font-size: 0.6rem;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════
+   DAY DETAIL MODAL
+   ═══════════════════════════════════════════════ */
+.day-modal-card {
+  max-width: 520px;
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 28px 28px 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.day-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.day-modal-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-modal-date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.day-modal-totals {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dmt-chip {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.dmt-chip.dmt-work {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+.dmt-chip.dmt-break {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.day-modal-empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ─── Timeline ─── */
+.day-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 10px 10px 0;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.timeline-item:hover {
+  background: var(--accent-subtle);
+}
+
+.timeline-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.timeline-item-work .timeline-dot {
+  background: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.timeline-item-break .timeline-dot {
+  background: var(--warning);
+  box-shadow: 0 0 0 3px var(--warning-bg);
+}
+
+.timeline-active .timeline-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-bg);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--success-bg);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px var(--success-bg);
+  }
+}
+
+.timeline-connector {
+  width: 2px;
+  flex: 1;
+  background: var(--card-border);
+  margin: 4px 0;
+}
+
+.timeline-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-times {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.timeline-arrow {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.timeline-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tl-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.tl-badge.work,
+.tl-badge-work {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+.tl-badge.break,
+.tl-badge-break {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+
+.tl-duration {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.tl-delete-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  align-self: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tl-delete-btn:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.tl-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Pending / deleting timeline item states ── */
+.timeline-item-pending {
+  background: var(--warning-bg) !important;
+  border-radius: var(--radius-sm);
+  outline: 1.5px dashed var(--warning);
+}
+
+.timeline-item-deleting {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* ── Delete button — pending (cancel X) state ── */
+.tl-delete-btn-pending {
+  border-color: var(--warning) !important;
+  color: var(--warning) !important;
+  background: var(--warning-bg) !important;
+}
+
+/* ── Position label below the meta row ── */
+.tl-position-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+/* ── Active session pulsing dot ── */
+.tl-active-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-left: 5px;
+  vertical-align: middle;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ── Inline confirmation box ── */
+.dm-confirm-box {
+  background: var(--slate-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideDown 0.25s ease;
+}
+
+.dm-confirm-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.dm-confirm-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.dm-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dm-btn-cancel {
+  flex: 1;
+  padding: 9px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.dm-btn-cancel:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+  background: var(--accent-subtle);
+}
+
+.dm-btn-confirm {
+  flex: 1;
+  padding: 9px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 2px 8px rgba(255, 82, 82, 0.3);
+}
+
+.dm-btn-confirm:hover {
+  background: hsl(0, 90%, 52%);
+  box-shadow: 0 4px 14px rgba(255, 82, 82, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Error / success message banners ── */
+.dm-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.dm-message-error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(255, 82, 82, 0.2);
+}
+
+.dm-message-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid rgba(46, 174, 91, 0.2);
+}
+
+.dm-msg-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+/* ── Footer hint ── */
+.dm-footer-hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding-top: 4px;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════
+   MANUAL ENTRY PANEL
+   ═══════════════════════════════════════════════ */
+.manual-entry-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 88px;
+  /* below navbar */
+}
+
+.mep-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.mep-header-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mep-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.mep-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.mep-sessions-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: -10px;
+}
+
+.mep-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mep-session-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--slate-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 12px 12px 10px;
+  transition: border-color var(--transition);
+}
+
+.mep-session-row:focus-within {
+  border-color: var(--accent-primary);
+}
+
+.mep-session-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.mep-time-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1;
+}
+
+.mep-arrow {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  padding-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.mep-remove-btn {
+  background: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-dim);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.mep-remove-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+/* Break indicator between sessions */
+.mep-break-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+}
+
+.mep-break-line {
+  flex: 1;
+  height: 1px;
+  background: var(--card-border);
+  border-style: dashed;
+}
+
+.mep-break-label {
+  font-size: 0.72rem;
+  color: var(--warning);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mep-add-session-btn {
+  background: transparent;
+  border: 1.5px dashed var(--accent-primary);
+  color: var(--accent-primary);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.mep-add-session-btn:hover {
+  background: var(--accent-subtle);
+  border-style: solid;
+}
+
+/* Summary row */
+.mep-summary {
+  display: flex;
+  gap: 10px;
+}
+
+.mep-summary-chip {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.mep-summary-chip.work {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+.mep-summary-chip.break {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.mep-success {
+  background: var(--success-bg);
+  border: 1px solid rgba(46, 174, 91, 0.15);
+  color: var(--success);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ── "Add Past Day Record" header button ── */
+.btn-add-record {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.btn-add-record:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* ── Manual entry modal card ── */
+.manual-entry-modal-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
+  width: 440px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.manual-entry-modal-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -8px;
+}
+
+/* ── Active session cell badge ── */
+.dcs-active {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--success);
+  white-space: nowrap;
 }

@@ -314,9 +314,19 @@ export function useWorkTimer(initialState: TimerState | null = null) {
     }, []);
 
     /**
-     * Insert a historical break without sequential ordering constraint.
-     * Works by directly adjusting accumulated work/break ms, so the user
-     * can add e.g. an 11:00-11:05 break even after already recording 13:00-14:00.
+     * Insert a historical break and immediately recalibrate all timer values.
+     *
+     * The key insight: all derived values (totalWork, remainingWork, leaveTime) are
+     * computed at render time as:
+     *   totalWork = accumulatedWorkMs + currentSessionWork
+     *   currentSessionWork = now - lastStatusChange   (when working)
+     *
+     * So to recalibrate the countdown we must EITHER:
+     *  a) Reduce accumulatedWorkMs — if the break is in past committed time
+     *  b) Advance lastStatusChange — if the break is inside the current live session
+     *     (advancing it makes currentSessionWork shrink by the same amount)
+     *
+     * In practice we split the break into those two parts and apply each accordingly.
      */
     const addHistoricalBreak = useCallback(
         (punchOutMs: number, punchInMs: number): { success: boolean; error?: string } => {
@@ -335,12 +345,31 @@ export function useWorkTimer(initialState: TimerState | null = null) {
             const breakDuration = punchInMs - punchOutMs;
 
             setState((prev) => {
-                // Subtract the break window from accumulated work time
-                // (that time was actually break, not work)
-                const newAccWork = Math.max(0, prev.accumulatedWorkMs - breakDuration);
+                const lastChange = prev.lastStatusChange ?? prev.startTime ?? 0;
+                const isWorking = prev.status === "working";
+
+                // Split the break into:
+                //   committedPart: falls before lastStatusChange (inside accumulatedWorkMs)
+                //   livePart:      falls after  lastStatusChange (inside currentSessionWork)
+                let committedDeduction = breakDuration;
+                let liveDeduction = 0;
+
+                if (isWorking && punchInMs > lastChange) {
+                    // The break (or part of it) is inside the current live session window
+                    const overlapStart = Math.max(punchOutMs, lastChange);
+                    liveDeduction = punchInMs - overlapStart;          // inside live window
+                    committedDeduction = breakDuration - liveDeduction; // inside accumulated
+                }
+
+                const newAccWork = Math.max(0, prev.accumulatedWorkMs - committedDeduction);
                 const newAccBreak = prev.accumulatedBreakMs + breakDuration;
 
-                // Merge new log entries and re-sort newest-first
+                // Advance lastStatusChange by the live portion so currentSessionWork shrinks
+                const newLastStatusChange = isWorking && liveDeduction > 0
+                    ? lastChange + liveDeduction
+                    : prev.lastStatusChange;
+
+                // Merge log entries newest-first
                 const newLogs = [
                     { type: "Punch Out (Break)", time: punchOutMs },
                     { type: "Punch In (Work)", time: punchInMs },
@@ -353,12 +382,23 @@ export function useWorkTimer(initialState: TimerState | null = null) {
                     ...prev,
                     accumulatedWorkMs: newAccWork,
                     accumulatedBreakMs: newAccBreak,
+                    lastStatusChange: newLastStatusChange,
                     logs: newLogs,
                 };
 
                 syncTimerStateToBackend(newState);
                 return newState;
             });
+
+            // Fire-and-forget: split the active DB row so the calendar reflects the break
+            fetch("/api/worklog/add-break", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    breakStart: new Date(punchOutMs).toISOString(),
+                    breakEnd: new Date(punchInMs).toISOString(),
+                }),
+            }).catch((err) => console.error("[add-break] DB sync failed:", err));
 
             setLastSynced(new Date());
             return { success: true };

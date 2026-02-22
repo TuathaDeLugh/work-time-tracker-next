@@ -36,6 +36,35 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { type, time, totalHours, date } = body;
 
+        // ── Bulk: create multiple completed sessions (past-day manual entry) ──
+        if (type === "bulk") {
+            const { sessions, date: bulkDate } = body as {
+                sessions: { punchIn: string; punchOut: string; totalHours: number }[];
+                date: string;
+            };
+
+            if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+                return NextResponse.json({ error: "No sessions provided" }, { status: 400 });
+            }
+
+            const logs = await prisma.$transaction(
+                sessions.map((s) =>
+                    prisma.workLog.create({
+                        data: {
+                            userId: session.user.id,
+                            date: new Date(bulkDate),
+                            punchIn: new Date(s.punchIn),
+                            punchOut: new Date(s.punchOut),
+                            totalHours: s.totalHours,
+                            status: "completed",
+                        },
+                    })
+                )
+            );
+
+            return NextResponse.json(logs, { status: 201 });
+        }
+
         if (type === "punch-in") {
             const log = await prisma.workLog.create({
                 data: {
@@ -49,7 +78,6 @@ export async function POST(req: Request) {
         }
 
         if (type === "punch-out") {
-            // Find the latest active log for this user
             const activeLog = await prisma.workLog.findFirst({
                 where: {
                     userId: session.user.id,

@@ -30,14 +30,13 @@ function fmtTime(ms: number): string {
   return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// ─── Build tabular session pairs from log ─────────────────────
+// ─── Build tabular session rows from log ─────────────────────
 interface SessionRow {
   punchIn: number;
-  punchOut: number | null; // null = ongoing
+  punchOut: number | null;
 }
 
 function buildSessionRows(logs: TimerLog[], status: TimerStatus): SessionRow[] {
-  // Sort oldest → newest
   const sorted = [...logs].sort((a, b) => a.time - b.time);
   const rows: SessionRow[] = [];
   let currentIn: number | null = null;
@@ -51,7 +50,6 @@ function buildSessionRows(logs: TimerLog[], status: TimerStatus): SessionRow[] {
     }
   }
 
-  // If currently working, the last punch-in hasn't been closed yet
   if (status === "working" && currentIn !== null) {
     rows.push({ punchIn: currentIn, punchOut: null });
   }
@@ -81,7 +79,9 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <span className="modal-icon">☕</span>
+          <span className="modal-icon">
+            <i className="ri-cup-line" />
+          </span>
           <h2>Add Break Entry</h2>
           <p className="modal-subtitle">Manually record a break you already took (any time today)</p>
         </div>
@@ -118,7 +118,7 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              ✅ Add Break
+              <i className="ri-check-line" /> Add Break
             </button>
           </div>
         </form>
@@ -148,7 +148,9 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card modal-card-sm" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <span className="modal-icon">▶</span>
+          <span className="modal-icon">
+            <i className="ri-play-circle-line" />
+          </span>
           <h2>Resume Work</h2>
           <p className="modal-subtitle">Set the time you actually resumed working</p>
         </div>
@@ -172,7 +174,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-punch-in">
-              ▶ Start Working
+              <i className="ri-play-fill" /> Start Working
             </button>
           </div>
         </form>
@@ -181,55 +183,62 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
   );
 }
 
-// ─── Session Table ────────────────────────────────────────────
-function SessionTable({ logs, status }: { logs: TimerLog[]; status: TimerStatus }) {
+// ─── Session Panel (right column) ────────────────────────────
+function SessionPanel({ logs, status }: { logs: TimerLog[]; status: TimerStatus }) {
   const rows = buildSessionRows(logs, status);
-  if (rows.length === 0) return null;
 
   return (
-    <div className="activity-section">
-      <h3>Sessions</h3>
-      <div className="session-table-wrapper">
-        <table className="session-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Punch In</th>
-              <th>Punch Out</th>
-              <th>Duration</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => {
-              const durationMs = row.punchOut
-                ? row.punchOut - row.punchIn
-                : Date.now() - row.punchIn;
-              const h = Math.floor(durationMs / 3600000);
-              const m = Math.floor((durationMs % 3600000) / 60000);
-              const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-
-              return (
-                <tr key={i} className={row.punchOut === null ? "session-row-active" : ""}>
-                  <td className="session-num">{i + 1}</td>
-                  <td className="mono">{fmtTime(row.punchIn)}</td>
-                  <td className="mono">
-                    {row.punchOut ? fmtTime(row.punchOut) : <span className="session-ongoing">ongoing</span>}
-                  </td>
-                  <td className="mono session-duration">{durationStr}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div className="session-panel glass-card animate-in">
+      <div className="session-panel-header">
+        <i className="ri-time-line session-panel-icon" />
+        <span className="session-panel-title">Today&apos;s Sessions</span>
+        <span className="session-panel-count">{rows.length}</span>
       </div>
+
+      {rows.length === 0 ? (
+        <div className="session-panel-empty">
+          <i className="ri-calendar-line" />
+          <span>No sessions yet</span>
+        </div>
+      ) : (
+        <div className="session-panel-list">
+          {rows.map((row, i) => {
+            const durationMs = row.punchOut
+              ? row.punchOut - row.punchIn
+              : Date.now() - row.punchIn;
+            const h = Math.floor(durationMs / 3600000);
+            const m = Math.floor((durationMs % 3600000) / 60000);
+            const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+            const isActive = row.punchOut === null;
+
+            return (
+              <div key={i} className={`session-panel-row${isActive ? " session-panel-row-active" : ""}`}>
+                <div className="session-panel-num">{i + 1}</div>
+                <div className="session-panel-times">
+                  <span className="session-panel-time mono">{fmtTime(row.punchIn)}</span>
+                  <i className="ri-arrow-right-line session-panel-arrow" />
+                  <span className="session-panel-time mono">
+                    {row.punchOut
+                      ? fmtTime(row.punchOut)
+                      : <span className="session-ongoing">ongoing</span>
+                    }
+                  </span>
+                </div>
+                <div className="session-panel-dur mono">{durationStr}</div>
+                {isActive && (
+                  <span className="session-panel-live-dot" title="Active" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Main Dashboard ───────────────────────────────────────────
-export default function DashboardClient({
-  initialTimerState,
-}: DashboardClientProps) {
+export default function DashboardClient({ initialTimerState }: DashboardClientProps) {
   const {
     state,
     totalWork,
@@ -256,7 +265,6 @@ export default function DashboardClient({
   const [startTimeStr, setStartTimeStr] = useState<string>("--:--");
   const [lastSyncedStr, setLastSyncedStr] = useState<string>("");
 
-  // Modal state
   const [showBreakModal, setShowBreakModal] = useState(false);
   const [showLatePunchInModal, setShowLatePunchInModal] = useState(false);
 
@@ -314,7 +322,6 @@ export default function DashboardClient({
     startDay(workHours, workMinutes, breakMinutes, entryTime);
   };
 
-  // ── Historical break: inserts at any past time ───────────────
   const handleAddBreak = (punchOutStr: string, punchInStr: string): string | null => {
     const punchOutMs = timeStrToMs(punchOutStr);
     const punchInMs = timeStrToMs(punchInStr);
@@ -324,7 +331,6 @@ export default function DashboardClient({
     return null;
   };
 
-  // ── Late punch-in: resume from a specific past time ──────────
   const handleLatePunchIn = (punchInStr: string): string | null => {
     if (state.status !== "break") return "You are not currently on break.";
     const punchInMs = timeStrToMs(punchInStr);
@@ -350,7 +356,7 @@ export default function DashboardClient({
         />
       )}
 
-      <div className="main-content">
+      <div className={`main-content${state.isActive ? " dashboard-page" : ""}`}>
         {!state.isActive ? (
           /* ─── Setup Form ─── */
           <div className="glass-card setup-card animate-in">
@@ -407,99 +413,105 @@ export default function DashboardClient({
             </div>
 
             <button onClick={handleStartDay} className="btn-primary btn-full">
-              🚀 Start Day
+              <i className="ri-rocket-line" /> Start Day
             </button>
           </div>
         ) : (
-          /* ─── Active Timer ─── */
-          <div className="glass-card dashboard-card animate-in">
-            <div className="dash-header">
-              <span className={`status-badge ${state.status === "working" ? "working" : "on-break"}`}>
-                {state.status === "working" ? "● Working" : "◉ On Break"}
-              </span>
-              <span className="clock-display mono">{timeStr}</span>
-            </div>
+          /* ─── Active Timer — two-column grid ─── */
+          <div className="dashboard-grid">
+            {/* LEFT: Timer card */}
+            <div className="glass-card dashboard-card animate-in">
+              <div className="dash-header">
+                <span className={`status-badge ${state.status === "working" ? "working" : "on-break"}`}>
+                  {state.status === "working"
+                    ? <><i className="ri-record-circle-fill" /> Working</>
+                    : <><i className="ri-pause-circle-fill" /> On Break</>
+                  }
+                </span>
+                <span className="clock-display mono">{timeStr}</span>
+              </div>
 
-            <div className="timer-hero">
-              <span className="timer-label">
-                {isOvertime ? "Overtime" : "Remaining work"}
-              </span>
-              <span className={`timer-value mono ${isOvertime ? "overtime" : ""}`}>
-                {isOvertime ? "+" : ""}
-                {ft(Math.abs(remainingWork))}
-              </span>
-            </div>
-
-            {!isOvertime && (
-              <div className="leave-time-display">
-                <span className="leave-time-label">You can leave at </span>
-                <span
-                  className="leave-time-value mono"
-                  title={`Early leave: ${earlyLeaveTimeStr}`}
-                >
-                  {leaveTimeStr}
+              <div className="timer-hero">
+                <span className="timer-label">
+                  {isOvertime ? "Overtime" : "Remaining work"}
+                </span>
+                <span className={`timer-value mono ${isOvertime ? "overtime" : ""}`}>
+                  {isOvertime ? "+" : ""}
+                  {ft(Math.abs(remainingWork))}
                 </span>
               </div>
-            )}
 
-            <div className="sync-status">
-              <span className="sync-dot" />
-              <span>
-                Auto-sync active
-                {lastSyncedStr && <> · Last synced {lastSyncedStr}</>}
-              </span>
-            </div>
-
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span className="stat-label">Worked</span>
-                <span className="stat-value mono">{formatShortTime(totalWork)}</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Break Used</span>
-                <span className="stat-value mono">{formatShortTime(totalBreak)}</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Break Left</span>
-                <span className={`stat-value mono ${remainingBreak <= 0 ? "danger" : ""}`}>
-                  {formatShortTime(Math.max(0, remainingBreak))}
-                </span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-label">Entry Time</span>
-                <span className="stat-value mono">{startTimeStr}</span>
-              </div>
-            </div>
-
-            {/* ─── Action Buttons ─── */}
-            <div className="punch-actions">
-              {state.status === "working" ? (
-                <>
-                  <button onClick={() => punchToggle()} className="btn-punch-out btn-full">
-                    ⏸ Punch Out
-                  </button>
-                  <button onClick={() => setShowBreakModal(true)} className="btn-break btn-full">
-                    ☕ Add Break Entry
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => punchToggle()} className="btn-punch-in btn-full">
-                    ▶ Punch In (Now)
-                  </button>
-                  <button onClick={() => setShowLatePunchInModal(true)} className="btn-late-punchin btn-full">
-                    🕐 I Already Resumed — Set Time
-                  </button>
-                </>
+              {!isOvertime && (
+                <div className="leave-time-display">
+                  <span className="leave-time-label">You can leave at </span>
+                  <span
+                    className="leave-time-value mono"
+                    title={`Early leave: ${earlyLeaveTimeStr}`}
+                  >
+                    {leaveTimeStr}
+                  </span>
+                </div>
               )}
+
+              <div className="sync-status">
+                <span className="sync-dot" />
+                <span>
+                  Auto-sync active
+                  {lastSyncedStr && <> · Last synced {lastSyncedStr}</>}
+                </span>
+              </div>
+
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <span className="stat-label">Worked</span>
+                  <span className="stat-value mono">{formatShortTime(totalWork)}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Break Used</span>
+                  <span className="stat-value mono">{formatShortTime(totalBreak)}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Break Left</span>
+                  <span className={`stat-value mono ${remainingBreak <= 0 ? "danger" : ""}`}>
+                    {formatShortTime(Math.max(0, remainingBreak))}
+                  </span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Entry Time</span>
+                  <span className="stat-value mono">{startTimeStr}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="punch-actions">
+                {state.status === "working" ? (
+                  <>
+                    <button onClick={() => punchToggle()} className="btn-punch-out btn-full">
+                      <i className="ri-pause-fill" /> Punch Out
+                    </button>
+                    <button onClick={() => setShowBreakModal(true)} className="btn-break btn-full">
+                      <i className="ri-cup-line" /> Add Break Entry
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => punchToggle()} className="btn-punch-in btn-full">
+                      <i className="ri-play-fill" /> Punch In (Now)
+                    </button>
+                    <button onClick={() => setShowLatePunchInModal(true)} className="btn-late-punchin btn-full">
+                      <i className="ri-time-line" /> I Already Resumed — Set Time
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button onClick={resetDay} className="btn-danger">
+                <i className="ri-refresh-line" /> Reset Day
+              </button>
             </div>
 
-            {/* ─── Session Table ─── */}
-            <SessionTable logs={state.logs} status={state.status} />
-
-            <button onClick={resetDay} className="btn-danger">
-              ↺ Reset Day
-            </button>
+            {/* RIGHT: Session panel */}
+            <SessionPanel logs={state.logs} status={state.status} />
           </div>
         )}
       </div>
