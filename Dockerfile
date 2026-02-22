@@ -1,5 +1,5 @@
 # 1. Base image
-FROM node:18-alpine AS base
+FROM node:24-alpine AS base
 
 # 2. Install dependencies only when needed
 FROM base AS deps
@@ -28,6 +28,7 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN npx prisma generate
 RUN npm run build
 
 # 4. Production image, copy all the files and run next
@@ -52,9 +53,9 @@ COPY --from=builder /app/prisma ./prisma
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 3100
 
-ENV PORT 3000
+ENV PORT 3100
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
