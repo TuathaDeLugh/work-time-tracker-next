@@ -279,6 +279,22 @@
   white-space: nowrap;
 }
 
+.dcs-overtime {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.dcs-early {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--danger);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 /* ═══════════════════════════════════════════════
    DAY DETAIL MODAL
    ═══════════════════════════════════════════════ */
@@ -329,6 +345,9 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .dmt-chip.dmt-work {
@@ -339,6 +358,16 @@
 .dmt-chip.dmt-break {
   background: var(--warning-bg);
   color: var(--warning);
+}
+
+.dmt-chip.dmt-overtime {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.dmt-chip.dmt-early {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .day-modal-empty {

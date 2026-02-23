@@ -180,287 +180,313 @@ export default function SettingsClient() {
         <p>Manage your profile, password, and preferences</p>
       </div>
 
-      <div className="settings-grid">
-        {/* Profile Card */}
-        <div className="glass-card animate-in">
-          <div className="settings-card-title">
-            <RiUserSettingsLine size={24} />
-            <h2>Profile Details</h2>
+      <div className="settings-stack">
+        
+        {/* Profile Details Card */}
+        <div className="glass-card settings-section animate-in">
+          <div className="settings-section-header">
+            <div className="title">
+              <RiUserSettingsLine size={20} />
+              <h2>Profile Details</h2>
+            </div>
+            <p>Your personal information and connected email address.</p>
           </div>
 
-          <form className="settings-form" onSubmit={handleProfileSubmit}>
-            {profileMessage.text && (
-              <div className={`dm-message dm-message-${profileMessage.type}`}>
-                {profileMessage.type === "error" ? (
-                  <RiErrorWarningLine className="dm-msg-icon" size={18} />
-                ) : (
-                  <RiCheckboxCircleLine className="dm-msg-icon" size={18} />
-                )}
-                {profileMessage.text}
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={session?.user?.email || ""}
-                disabled
-                className="input-disabled"
-              />
-              <span className="input-hint">Email cannot be changed</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="name">Display Name</label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-              />
-            </div>
-
-
-
-            <div className="settings-card-title">
-              <RiNotification3Line size={24} />
-              <h2>Notifications</h2>
-            </div>
-
-            <label className="toggle-switch-card">
-              <div className="toggle-info">
-                <span className="toggle-title">Desktop Notifications</span>
-                <span className="toggle-desc">
-                  Get alerted when your workday is complete and OT begins.
-                </span>
-              </div>
-              <div className="toggle-wrapper">
-                <input
-                  type="checkbox"
-                  className="toggle-checkbox"
-                  checked={notificationsEnabled}
-                  onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                />
-                <div className="toggle-slider"></div>
-              </div>
-            </label>
-
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={isSavingProfile}
-            >
-              {isSavingProfile ? (
-                <span className="spinner"></span>
-              ) : (
-                <>
-                  <RiSaveLine size={18} /> Save Profile
-                </>
+          <form onSubmit={handleProfileSubmit}>
+            <div className="settings-section-body">
+              {profileMessage.text && (
+                <div className={`dm-message dm-message-${profileMessage.type}`} style={{ marginBottom: "16px" }}>
+                  {profileMessage.type === "error" ? (
+                    <RiErrorWarningLine className="dm-msg-icon" size={18} />
+                  ) : (
+                    <RiCheckboxCircleLine className="dm-msg-icon" size={18} />
+                  )}
+                  {profileMessage.text}
+                </div>
               )}
-            </button>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label htmlFor="email">Email</label>
+                  <p>The email address associated with your account.</p>
+                </div>
+                <div className="settings-row-control">
+                  <input
+                    type="email"
+                    id="email"
+                    value={session?.user?.email || ""}
+                    disabled
+                    className="input-disabled"
+                  />
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label htmlFor="name">Display Name</label>
+                  <p>Your public-facing name across the application.</p>
+                </div>
+                <div className="settings-row-control">
+                  <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label>Desktop Notifications</label>
+                  <p>Get alerted when your workday is complete and OT begins.</p>
+                </div>
+                <div className="settings-row-control" style={{ justifyContent: "flex-end" }}>
+                  <label className="toggle-wrapper" style={{ margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      className="toggle-checkbox"
+                      checked={notificationsEnabled}
+                      onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                    />
+                    <div className="toggle-slider"></div>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+            <div className="settings-card-footer">
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSavingProfile}
+              >
+                {isSavingProfile ? <span className="spinner"></span> : "Save Profile"}
+              </button>
+            </div>
           </form>
         </div>
 
         {/* Work Preferences Card */}
-        <div className="glass-card animate-in delay-1">
-          <div className="settings-card-title">
-            <RiTimerLine size={24} />
-            <h2>Work Preferences</h2>
+        <div className="glass-card settings-section animate-in delay-1">
+          <div className="settings-section-header">
+            <div className="title">
+              <RiTimerLine size={20} />
+              <h2>Work Preferences</h2>
+            </div>
+            <p>Customize your tracking experience and daily target hours.</p>
           </div>
 
-          <form className="settings-form" onSubmit={handleProfileSubmit}>
-            <div className="form-group">
-              <label>Time Format</label>
-              <div className="radio-group row-radio">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="timeFormat"
-                    value="12h"
-                    checked={timeFormat === "12h"}
-                    onChange={(e) => setTimeFormat(e.target.value)}
-                  />
-                  <span>12-hour (AM/PM)</span>
-                </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="timeFormat"
-                    value="24h"
-                    checked={timeFormat === "24h"}
-                    onChange={(e) => setTimeFormat(e.target.value)}
-                  />
-                  <span>24-hour</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Work Duration</label>
-              <div className="dual-input">
-                <div className="input-half">
-                  <span className="input-label-small">Hours</span>
-                  <input
-                    type="number"
-                    value={workHours}
-                    onChange={(e) => setWorkHours(Number(e.target.value))}
-                    min="0"
-                    max="24"
-                  />
+          <form onSubmit={handleProfileSubmit}>
+            <div className="settings-section-body">
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label>Time Format</label>
+                  <p>Choose between 12-hour (AM/PM) and 24-hour display modes.</p>
                 </div>
-                <div className="input-half">
-                  <span className="input-label-small">Minutes</span>
-                  <input
-                    type="number"
-                    value={workMinutes}
-                    onChange={(e) => setWorkMinutes(Number(e.target.value))}
-                    min="0"
-                    max="59"
-                  />
+                <div className="settings-row-control">
+                  <div className="radio-group row-radio">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="timeFormat"
+                        value="12h"
+                        checked={timeFormat === "12h"}
+                        onChange={(e) => setTimeFormat(e.target.value)}
+                      />
+                      <span>12-hour</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="timeFormat"
+                        value="24h"
+                        checked={timeFormat === "24h"}
+                        onChange={(e) => setTimeFormat(e.target.value)}
+                      />
+                      <span>24-hour</span>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label>Break Time (Minutes)</label>
-              <input
-                type="number"
-                value={breakMinutes}
-                onChange={(e) => setBreakMinutes(Number(e.target.value))}
-                min="0"
-              />
-            </div>
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label>Work Duration</label>
+                  <p>The daily quota of hours to track before hitting Overtime.</p>
+                </div>
+                <div className="settings-row-control">
+                  <div className="dual-input">
+                    <div className="input-half">
+                      <span className="input-label-small">Hrs</span>
+                      <input
+                        type="number"
+                        value={workHours}
+                        onChange={(e) => setWorkHours(Number(e.target.value))}
+                        min="0"
+                        max="24"
+                      />
+                    </div>
+                    <div className="input-half">
+                      <span className="input-label-small">Min</span>
+                      <input
+                        type="number"
+                        value={workMinutes}
+                        onChange={(e) => setWorkMinutes(Number(e.target.value))}
+                        min="0"
+                        max="59"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={isSavingProfile}
-            >
-              {isSavingProfile ? (
-                <span className="spinner"></span>
-              ) : (
-                <>
-                  <RiSaveLine size={18} /> Save Preferences
-                </>
-              )}
-            </button>
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label>Break Time Quota</label>
+                  <p>Total allocated break limit per day in minutes.</p>
+                </div>
+                <div className="settings-row-control">
+                  <input
+                    type="number"
+                    value={breakMinutes}
+                    onChange={(e) => setBreakMinutes(Number(e.target.value))}
+                    min="0"
+                    style={{ maxWidth: "120px" }}
+                  />
+                </div>
+              </div>
+
+            </div>
+            <div className="settings-card-footer">
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSavingProfile}
+              >
+                {isSavingProfile ? <span className="spinner"></span> : "Save Preferences"}
+              </button>
+            </div>
           </form>
         </div>
 
         {/* Security Card */}
-        <div className="glass-card animate-in delay-2">
-          <div className="settings-card-title">
-            <RiLockPasswordLine size={24} />
-            <h2>Security</h2>
+        <div className="glass-card settings-section animate-in delay-2">
+          <div className="settings-section-header">
+            <div className="title">
+              <RiLockPasswordLine size={20} />
+              <h2>Security</h2>
+            </div>
+            <p>Update your password to ensure your account stays protected.</p>
           </div>
 
-          <form className="settings-form" onSubmit={handlePasswordSubmit}>
-            {passwordMessage.text && (
-              <div className={`dm-message dm-message-${passwordMessage.type}`}>
-                {passwordMessage.type === "error" ? (
-                  <RiErrorWarningLine className="dm-msg-icon" size={18} />
-                ) : (
-                  <RiCheckboxCircleLine className="dm-msg-icon" size={18} />
-                )}
-                {passwordMessage.text}
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="currentPassword">Current Password</label>
-              <div className="password-field-wrapper">
-                <input
-                  type={showCurrentPassword ? "text" : "password"}
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  aria-label="Toggle current password visibility"
-                >
-                  {showCurrentPassword ? (
-                    <RiEyeOffLine size={18} />
+          <form onSubmit={handlePasswordSubmit}>
+            <div className="settings-section-body">
+              {passwordMessage.text && (
+                <div className={`dm-message dm-message-${passwordMessage.type}`} style={{ marginBottom: "16px" }}>
+                  {passwordMessage.type === "error" ? (
+                    <RiErrorWarningLine className="dm-msg-icon" size={18} />
                   ) : (
-                    <RiEyeLine size={18} />
+                    <RiCheckboxCircleLine className="dm-msg-icon" size={18} />
                   )}
-                </button>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="newPassword">New Password</label>
-              <div className="password-field-wrapper">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  aria-label="Toggle new password visibility"
-                >
-                  {showNewPassword ? (
-                    <RiEyeOffLine size={18} />
-                  ) : (
-                    <RiEyeLine size={18} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm New Password</label>
-              <div className="password-field-wrapper">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label="Toggle confirm password visibility"
-                >
-                  {showConfirmPassword ? (
-                    <RiEyeOffLine size={18} />
-                  ) : (
-                    <RiEyeLine size={18} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="btn-secondary"
-              disabled={isSavingPassword}
-            >
-              {isSavingPassword ? (
-                <span className="spinner"></span>
-              ) : (
-                <>
-                  <RiRefreshLine size={18} /> Update Password
-                </>
+                  {passwordMessage.text}
+                </div>
               )}
-            </button>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label htmlFor="currentPassword">Current Password</label>
+                  <p>Verify your identity by entering your current password.</p>
+                </div>
+                <div className="settings-row-control">
+                  <div className="password-field-wrapper">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      id="currentPassword"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label htmlFor="newPassword">New Password</label>
+                  <p>Must be at least 6 characters long.</p>
+                </div>
+                <div className="settings-row-control">
+                  <div className="password-field-wrapper">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      id="newPassword"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="New password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <p>Please type your new password again.</p>
+                </div>
+                <div className="settings-row-control">
+                  <div className="password-field-wrapper">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div className="settings-card-footer">
+              <button
+                type="submit"
+                className="btn-secondary"
+                disabled={isSavingPassword}
+              >
+                {isSavingPassword ? <span className="spinner"></span> : "Update Password"}
+              </button>
+            </div>
           </form>
         </div>
+
       </div>
     </div>
   );

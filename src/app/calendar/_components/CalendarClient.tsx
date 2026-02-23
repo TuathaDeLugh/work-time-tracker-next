@@ -54,6 +54,7 @@ interface CalendarClientProps {
   initialEvents: CalendarEvent[];
   adminUserId?: string;
   timeFormat?: string;
+  workDurationMs?: number;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -72,6 +73,7 @@ export default function CalendarClient({
   initialEvents,
   adminUserId,
   timeFormat,
+  workDurationMs = 8 * 3600000, // Fallback to 8 hrs if undefined
 }: CalendarClientProps) {
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
@@ -283,11 +285,48 @@ export default function CalendarClient({
             const d = String(arg.date.getDate()).padStart(2, "0");
             const dateStr = `${y}-${mo}-${d}`;
             const summary = dailySummaryMap[dateStr];
+            
+            let overtimeMs = 0;
+            let earlyMs = 0;
+
+            const day = arg.date.getDay();
+            const weekNumber = Math.ceil(arg.date.getDate() / 7);
+            const isOffDay = day === 0 || (day === 6 && [1, 3, 5].includes(weekNumber));
+
+            if (summary && summary.workMs > 60000) {
+              if (isOffDay) {
+                overtimeMs = summary.workMs;
+              } else {
+                if (summary.workMs > workDurationMs) {
+                  overtimeMs = summary.workMs - workDurationMs;
+                } else if (
+                  summary.workMs < workDurationMs - 30 * 60000 &&
+                  !summary.hasActive
+                ) {
+                  earlyMs = workDurationMs - summary.workMs;
+                }
+              }
+            }
+
+            if (overtimeMs <= 30 * 60000) {
+              overtimeMs = 0;
+            }
+
             return (
               <div className="fc-day-cell-inner">
                 <span className="fc-daygrid-day-number">
                   {arg.dayNumberText}
                 </span>
+                {overtimeMs > 0 && (
+                  <span className="dcs-overtime">
+                    O.T. ({msFmt(overtimeMs)})
+                  </span>
+                )}
+                {earlyMs > 0 && (
+                  <span className="dcs-early">
+                    E.G. ({msFmt(earlyMs)})
+                  </span>
+                )}
                 {summary && summary.workMs > 60000 && (
                   <div className="day-cell-summary">
                     {summary.hasActive && (

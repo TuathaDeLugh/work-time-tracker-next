@@ -18,6 +18,8 @@ type AdminUser = {
   name: string | null;
   email: string;
   isAdmin: boolean;
+  workHours: number;
+  workMinutes: number;
   createdAt: string;
 };
 
@@ -134,7 +136,7 @@ export default function AdminClient({
 function UserTimelogsTab({ timeFormat }: { timeFormat?: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -155,17 +157,22 @@ function UserTimelogsTab({ timeFormat }: { timeFormat?: string }) {
   return (
     <div className="glass-card animate-in">
       <h2>Select User to View Timelogs</h2>
-      {selectedUserId ? (
+      {selectedUser ? (
         <div className="admin-calendar-view" style={{ marginTop: "16px" }}>
           <button
             className="btn-secondary"
-            onClick={() => setSelectedUserId(null)}
+            onClick={() => setSelectedUser(null)}
             style={{ marginBottom: "16px" }}
           >
             ← Back to Users
           </button>
           <div style={{ margin: "0 -20px" }}>
-            <CalendarClient initialEvents={[]} adminUserId={selectedUserId} timeFormat={timeFormat} />
+            <CalendarClient 
+              initialEvents={[]} 
+              adminUserId={selectedUser.id} 
+              timeFormat={timeFormat} 
+              workDurationMs={(selectedUser.workHours * 3600000) + (selectedUser.workMinutes * 60000)}
+            />
           </div>
         </div>
       ) : (
@@ -202,7 +209,7 @@ function UserTimelogsTab({ timeFormat }: { timeFormat?: string }) {
                   <button
                     className="btn-primary"
                     style={{ padding: "6px 12px", fontSize: "0.8rem" }}
-                    onClick={() => setSelectedUserId(u.id)}
+                    onClick={() => setSelectedUser(u)}
                   >
                     View Logs
                   </button>

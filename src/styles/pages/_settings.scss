@@ -1,14 +1,18 @@
 /* ═══════════════════════════════════════════════
-   SETTINGS PAGE
+   SETTINGS PAGE REDESIGN
    ═══════════════════════════════════════════════ */
+
 .settings-container {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .settings-header {
   margin-bottom: 8px;
+  text-align: left;
 }
 
 .settings-header h1 {
@@ -24,122 +28,147 @@
   font-size: 0.95rem;
 }
 
-.settings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .settings-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.settings-card-title {
+/* Layout Stack */
+.settings-stack {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.settings-section {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.settings-section-header {
+  padding: 24px 32px;
   border-bottom: 1px solid var(--card-border);
 }
 
-.settings-card-title i {
-  font-size: 1.5rem;
-  color: var(--accent-primary);
+.settings-section-header .title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.settings-card-title h2 {
-  font-size: 1.25rem;
+.settings-section-header .title i,
+.settings-section-header .title svg {
+  color: var(--text-main);
+  opacity: 0.8;
+}
+
+.settings-section-header h2 {
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-main);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
-.settings-form {
+.settings-section-header p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-left: 32px;
+}
+
+.settings-section-body {
+  padding: 0 32px;
+}
+
+/* Rows */
+.settings-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--card-border);
+  gap: 24px;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row-info {
+  flex: 1 1 50%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 6px;
 }
 
+.settings-row-info label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.settings-row-info p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.settings-row-control {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.settings-row-control input:not([type="radio"]):not([type="checkbox"]) {
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Card Footer */
+.settings-card-footer {
+  padding: 16px 32px;
+  background: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+[data-theme="dark"] .settings-card-footer {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Specific elements Overrides */
 .input-disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background: var(--slate-bg) !important;
 }
 
-.input-hint {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin-top: -4px;
-}
-
-.settings-divider {
-  height: 1px;
-  background: var(--card-border);
-  margin: 8px 0;
-}
-
 /* ── Toggle Switch ── */
-.toggle-switch-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: var(--slate-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.toggle-switch-card:hover {
-  border-color: var(--text-muted);
-}
-
-.toggle-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-right: 16px;
-}
-
-.toggle-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-main);
-}
-
-.toggle-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
 .toggle-wrapper {
   position: relative;
-  width: 48px;
+  width: 44px;
   height: 24px;
   flex-shrink: 0;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .toggle-checkbox {
   opacity: 0;
   width: 0;
   height: 0;
+  position: absolute;
 }
 
 .toggle-slider {
   position: absolute;
-  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: var(--card-border);
-  transition: 0.4s;
+  transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   border-radius: 24px;
 }
 
@@ -151,25 +180,26 @@
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.4s;
+  transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-checkbox:checked + .toggle-slider {
+.toggle-checkbox:checked+.toggle-slider {
   background-color: var(--accent-primary);
 }
 
-.toggle-checkbox:checked + .toggle-slider:before {
-  transform: translateX(24px);
+.toggle-checkbox:checked+.toggle-slider:before {
+  transform: translateX(20px);
 }
 
-/* ── Password Toggle ── */
+/* ── Password Field ── */
 .password-field-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
+  max-width: 320px;
 }
 
 .password-field-wrapper input {
@@ -183,20 +213,48 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 1.2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
 }
 
 .password-toggle-btn:hover {
   color: var(--text-main);
 }
 
-.password-toggle-btn:focus {
-  outline: none;
-  color: var(--accent-primary);
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .settings-row {
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 0;
+  }
+
+  .settings-row-control {
+    width: 100%;
+  }
+
+  .settings-row-control input:not([type="radio"]):not([type="checkbox"]) {
+    max-width: 100%;
+  }
+
+  .settings-section-header {
+    padding: 20px;
+  }
+
+  .settings-section-header p {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .settings-section-body {
+    padding: 0 20px;
+  }
+
+  .settings-card-footer {
+    padding: 16px 20px;
+  }
 }

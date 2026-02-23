@@ -59,6 +59,7 @@ interface Props {
   date: string; // YYYY-MM-DD
   events: CalendarEvent[];
   timeFormat: string;
+  workDurationMs?: number;
   onClose: () => void;
   onRefresh: () => void;
 }
@@ -90,6 +91,7 @@ export default function DayDetailModal({
   date,
   events,
   timeFormat,
+  workDurationMs = 8 * 3600000,
   onClose,
   onRefresh,
 }: Props) {
@@ -143,6 +145,36 @@ export default function DayDetailModal({
   const totalBreak = timeline
     .filter((t) => t.type === "break")
     .reduce((s, t) => s + t.durationMs, 0);
+
+  let overtimeMs = 0;
+  let earlyMs = 0;
+  const hasActiveWork = timeline.some((t) => t.isActive && t.type === "work");
+
+  const [year, month, day] = date.split("-").map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  const dayOfWeek = dateObj.getDay();
+  const dateNum = dateObj.getDate();
+  const weekNumber = Math.ceil(dateNum / 7);
+  const isOffDay = dayOfWeek === 0 || (dayOfWeek === 6 && [1, 3, 5].includes(weekNumber));
+
+  if (totalWork > 0) {
+    if (isOffDay) {
+      overtimeMs = totalWork;
+    } else {
+      if (totalWork > workDurationMs) {
+        overtimeMs = totalWork - workDurationMs;
+      } else if (
+        totalWork < workDurationMs - 30 * 60000 &&
+        !hasActiveWork
+      ) {
+        earlyMs = workDurationMs - totalWork;
+      }
+    }
+  }
+
+  if (overtimeMs <= 30 * 60000) {
+    overtimeMs = 0;
+  }
 
   // ── Delete handler ───────────────────────────────────────────
 
@@ -277,6 +309,16 @@ export default function DayDetailModal({
               {totalBreak > 0 && (
                 <span className="dmt-chip dmt-break">
                   <RiCupLine size={16} /> {fmtDur(totalBreak)} break
+                </span>
+              )}
+              {overtimeMs > 0 && (
+                <span className="dmt-chip dmt-overtime">
+                  Overtime ({fmtDur(overtimeMs)})
+                </span>
+              )}
+              {earlyMs > 0 && (
+                <span className="dmt-chip dmt-early">
+                  Early going by ({fmtDur(earlyMs)})
                 </span>
               )}
             </div>
