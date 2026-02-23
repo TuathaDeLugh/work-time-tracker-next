@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getWorkLogs } from "@/lib/api-services";
+import { getWorkLogs, getUserProfile } from "@/lib/api-services";
 import CalendarClient from "./_components/CalendarClient";
 
 export default async function CalendarPage() {
@@ -11,6 +11,12 @@ export default async function CalendarPage() {
   }
 
   const events = await getWorkLogs(session.user.id);
+  const userProfile = await getUserProfile(session.user.id);
 
-  return <CalendarClient initialEvents={events} />;
+  return (
+    <CalendarClient 
+      initialEvents={events} 
+      timeFormat={userProfile?.timeFormat || "12h"} 
+    />
+  );
 }

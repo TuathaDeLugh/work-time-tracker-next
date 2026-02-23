@@ -23,8 +23,10 @@ type AdminUser = {
 
 export default function AdminClient({
   currentUserId,
+  timeFormat,
 }: {
   currentUserId: string;
+  timeFormat?: string;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("timelogs");
 
@@ -121,7 +123,7 @@ export default function AdminClient({
       </div>
 
       <div className="admin-content">
-        {activeTab === "timelogs" && <UserTimelogsTab />}
+        {activeTab === "timelogs" && <UserTimelogsTab timeFormat={timeFormat} />}
         {activeTab === "notifications" && <PushNotificationsTab />}
         {activeTab === "admins" && <AdminsTab currentUserId={currentUserId} />}
       </div>
@@ -129,7 +131,7 @@ export default function AdminClient({
   );
 }
 
-function UserTimelogsTab() {
+function UserTimelogsTab({ timeFormat }: { timeFormat?: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -163,7 +165,7 @@ function UserTimelogsTab() {
             ← Back to Users
           </button>
           <div style={{ margin: "0 -20px" }}>
-            <CalendarClient initialEvents={[]} adminUserId={selectedUserId} />
+            <CalendarClient initialEvents={[]} adminUserId={selectedUserId} timeFormat={timeFormat} />
           </div>
         </div>
       ) : (

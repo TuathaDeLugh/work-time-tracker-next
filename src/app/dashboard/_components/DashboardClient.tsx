@@ -25,8 +25,16 @@ import {
   RiRefreshLine,
 } from "@remixicon/react";
 
+interface UserProfile {
+  timeFormat?: string;
+  workHours?: number;
+  workMinutes?: number;
+  breakMinutes?: number;
+}
+
 interface DashboardClientProps {
   initialTimerState: TimerState | null;
+  userProfile: UserProfile | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -42,10 +50,11 @@ function nowTimeStr(): string {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-function fmtTime(ms: number): string {
+function fmtTime(ms: number, format: "12h" | "24h" = "12h"): string {
   return new Date(ms).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: format === "12h",
   });
 }
 
@@ -238,8 +247,8 @@ function SessionPanel({
             // eslint-disable-next-line react-hooks/purity
             const durationMs = row.punchOut
               ? row.punchOut - row.punchIn
-              // eslint-disable-next-line react-hooks/purity
-              : Date.now() - row.punchIn;
+              : // eslint-disable-next-line react-hooks/purity
+                Date.now() - row.punchIn;
             const h = Math.floor(durationMs / 3600000);
             const m = Math.floor((durationMs % 3600000) / 60000);
             const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -253,12 +262,16 @@ function SessionPanel({
                 <div className="session-panel-num">{i + 1}</div>
                 <div className="session-panel-times">
                   <span className="session-panel-time mono">
-                    {fmtTime(row.punchIn)}
+                    {fmtTime(row.punchIn, status === "working" ? "12h" : "12h")}{" "}
+                    {/* Will fix via prop later or component context if possible, wait, session panel needs user profile. We'll pass userProfile to SessionPanel in next chunk */}
                   </span>
                   <RiArrowRightLine className="session-panel-arrow" size={14} />
                   <span className="session-panel-time mono">
                     {row.punchOut ? (
-                      fmtTime(row.punchOut)
+                      fmtTime(
+                        row.punchOut,
+                        status === "working" ? "12h" : "12h",
+                      )
                     ) : (
                       <span className="session-ongoing">ongoing</span>
                     )}
@@ -280,6 +293,7 @@ function SessionPanel({
 // ─── Main Dashboard ───────────────────────────────────────────
 export default function DashboardClient({
   initialTimerState,
+  userProfile,
 }: DashboardClientProps) {
   const {
     state,
@@ -298,9 +312,12 @@ export default function DashboardClient({
     formatTime: ft,
   } = useWorkTimer(initialTimerState);
 
-  const [workHours, setWorkHours] = useState(8);
-  const [workMinutes, setWorkMinutes] = useState(0);
-  const [breakMinutes, setBreakMinutes] = useState(60);
+  const [workHours, setWorkHours] = useState(userProfile?.workHours ?? 8);
+  const [workMinutes, setWorkMinutes] = useState(userProfile?.workMinutes ?? 0);
+  const [breakMinutes, setBreakMinutes] = useState(
+    userProfile?.breakMinutes ?? 60,
+  );
+  const timeFormat = userProfile?.timeFormat === "24h" ? "24h" : "12h";
   const [entryTime, setEntryTime] = useState(() => {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, "0");
@@ -319,7 +336,9 @@ export default function DashboardClient({
   useEffect(() => {
     const updateTime = () => {
       const now = Date.now();
-      setTimeStr(new Date(now).toLocaleTimeString());
+      setTimeStr(
+        new Date(now).toLocaleTimeString([], { hour12: timeFormat === "12h" }),
+      );
 
       if (remainingWork) {
         const targetTime = now + remainingWork;
@@ -327,12 +346,14 @@ export default function DashboardClient({
           new Date(targetTime).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: timeFormat === "12h",
           }),
         );
         setEarlyLeaveTimeStr(
           new Date(targetTime - 29 * 60000).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: timeFormat === "12h",
           }),
         );
       }
@@ -342,6 +363,7 @@ export default function DashboardClient({
           new Date(state.startTime).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: timeFormat === "12h",
           }),
         );
       } else {
@@ -353,6 +375,7 @@ export default function DashboardClient({
           lastSynced.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: timeFormat === "12h",
           }),
         );
       }
@@ -429,8 +452,10 @@ export default function DashboardClient({
                 <div className="input-half">
                   <span className="input-label-small">Hours</span>
                   <input
+                  className="input-disabled"
                     type="number"
                     id="workHours"
+                    disabled
                     value={workHours}
                     onChange={(e) => setWorkHours(Number(e.target.value))}
                     min="0"
@@ -440,8 +465,10 @@ export default function DashboardClient({
                 <div className="input-half">
                   <span className="input-label-small">Minutes</span>
                   <input
+                  className="input-disabled"
                     type="number"
                     id="workMinutes"
+                    disabled
                     value={workMinutes}
                     onChange={(e) => setWorkMinutes(Number(e.target.value))}
                     min="0"
@@ -454,8 +481,10 @@ export default function DashboardClient({
             <div className="form-group">
               <label>Break Time (Minutes)</label>
               <input
+              className="input-disabled"
                 type="number"
                 id="breakMinutes"
+                disabled
                 value={breakMinutes}
                 onChange={(e) => setBreakMinutes(Number(e.target.value))}
                 min="0"

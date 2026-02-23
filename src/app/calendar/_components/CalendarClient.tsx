@@ -53,6 +53,7 @@ interface CalendarEvent {
 interface CalendarClientProps {
   initialEvents: CalendarEvent[];
   adminUserId?: string;
+  timeFormat?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -61,15 +62,16 @@ function msFmt(ms: number): string {
   const totalMin = Math.floor(ms / 60000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}hr`;
+  return `${h}hr ${m}min`;
 }
 
 // ─── Main Component ───────────────────────────────────────────
 export default function CalendarClient({
   initialEvents,
   adminUserId,
+  timeFormat,
 }: CalendarClientProps) {
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
@@ -274,9 +276,7 @@ export default function CalendarClient({
             }
             return [];
           }}
-          // Hide event bars — show only our custom cell content
           eventDisplay="none"
-          // Custom cell content: day number + work/break summary only
           dayCellContent={(arg) => {
             const y = arg.date.getFullYear();
             const mo = String(arg.date.getMonth() + 1).padStart(2, "0");
@@ -320,6 +320,7 @@ export default function CalendarClient({
         <DayDetailModal
           date={dayModalDate}
           events={events}
+          timeFormat={timeFormat || "12h"}
           onClose={() => setDayModalDate(null)}
           onRefresh={() => {
             fetchLogs();

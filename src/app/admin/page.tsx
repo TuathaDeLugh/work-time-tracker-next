@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { getUserProfile } from "@/lib/api-services";
 import AdminClient from "./_components/AdminClient";
 
 export const metadata = {
@@ -17,9 +18,14 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
+  const userProfile = await getUserProfile(session.user.id);
+
   return (
     <main className="main-content admin-page">
-      <AdminClient currentUserId={session.user.id} />
+      <AdminClient 
+        currentUserId={session.user.id} 
+        timeFormat={userProfile?.timeFormat || "12h"} 
+      />
     </main>
   );
 }

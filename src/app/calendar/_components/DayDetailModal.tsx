@@ -58,17 +58,19 @@ interface PendingDelete {
 interface Props {
   date: string; // YYYY-MM-DD
   events: CalendarEvent[];
+  timeFormat: string;
   onClose: () => void;
   onRefresh: () => void;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function fmtT(iso: string | null | undefined): string {
+function fmtT(iso: string | null | undefined, format: string): string {
   if (!iso) return "–";
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: format === "12h",
   });
 }
 
@@ -87,6 +89,7 @@ function fmtDur(ms: number): string {
 export default function DayDetailModal({
   date,
   events,
+  timeFormat,
   onClose,
   onRefresh,
 }: Props) {
@@ -357,13 +360,13 @@ export default function DayDetailModal({
 
                   <div className="timeline-body">
                     <div className="timeline-times mono">
-                      <span>{fmtT(item.start)}</span>
+                      <span>{fmtT(item.start, timeFormat)}</span>
                       <RiArrowRightLine className="timeline-arrow" size={14} />
                       <span>
                         {item.isActive ? (
                           <span className="session-ongoing">now</span>
                         ) : (
-                          fmtT(item.end)
+                          fmtT(item.end, timeFormat)
                         )}
                       </span>
                     </div>
