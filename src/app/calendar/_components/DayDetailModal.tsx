@@ -1,6 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import {
+  RiBriefcaseLine,
+  RiCupLine,
+  RiCloseLine,
+  RiErrorWarningLine,
+  RiCheckboxCircleLine,
+  RiDeleteBinLine,
+  RiArrowRightLine,
+} from "@remixicon/react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -217,31 +226,31 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
             <div className="day-modal-totals">
               {totalWork > 0 && (
                 <span className="dmt-chip dmt-work">
-                  <i className="ri-briefcase-line" /> {fmtDur(totalWork)} worked
+                  <RiBriefcaseLine size={16} /> {fmtDur(totalWork)} worked
                 </span>
               )}
               {totalBreak > 0 && (
                 <span className="dmt-chip dmt-break">
-                  <i className="ri-cup-line" /> {fmtDur(totalBreak)} break
+                  <RiCupLine size={16} /> {fmtDur(totalBreak)} break
                 </span>
               )}
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
-            <i className="ri-close-line" />
+            <RiCloseLine size={20} />
           </button>
         </div>
 
         {/* Messages */}
         {errorMsg && (
           <div className="dm-message dm-message-error">
-            <i className="ri-error-warning-line dm-msg-icon" />
+            <RiErrorWarningLine className="dm-msg-icon" size={18} />
             <span>{errorMsg}</span>
           </div>
         )}
         {successMsg && (
           <div className="dm-message dm-message-success">
-            <i className="ri-checkbox-circle-line dm-msg-icon" />
+            <RiCheckboxCircleLine className="dm-msg-icon" size={18} />
             <span>{successMsg}</span>
           </div>
         )}
@@ -251,18 +260,18 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
           <div className="dm-confirm-box animate-in">
             <div className="dm-confirm-icon">
               {pendingDelete.item.type === "break"
-                ? <i className="ri-cup-line" />
-                : <i className="ri-briefcase-line" />
+                ? <RiCupLine size={20} />
+                : <RiBriefcaseLine size={20} />
               }
-              <i className="ri-delete-bin-line" style={{ marginLeft: 4 }} />
+              <RiDeleteBinLine style={{ marginLeft: 4 }} size={20} />
             </div>
             <p className="dm-confirm-text">{getConfirmMessage(pendingDelete.item)}</p>
             <div className="dm-confirm-actions">
               <button className="dm-btn-cancel" onClick={handleCancel}>
-                <i className="ri-close-line" /> Cancel
+                <RiCloseLine size={16} /> Cancel
               </button>
               <button className="dm-btn-confirm" onClick={handleConfirm}>
-                <i className="ri-delete-bin-line" /> Confirm Delete
+                <RiDeleteBinLine size={16} /> Confirm Delete
               </button>
             </div>
           </div>
@@ -301,7 +310,7 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
                   <div className="timeline-body">
                     <div className="timeline-times mono">
                       <span>{fmtT(item.start)}</span>
-                      <i className="ri-arrow-right-line timeline-arrow" />
+                      <RiArrowRightLine className="timeline-arrow" size={14} />
                       <span>
                         {item.isActive
                           ? <span className="session-ongoing">now</span>
@@ -312,8 +321,8 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
                     <div className="timeline-meta-row">
                       <span className={`tl-badge tl-badge-${item.type}`}>
                         {item.type === "work"
-                          ? <><i className="ri-briefcase-line" /> Work</>
-                          : <><i className="ri-cup-line" /> Break</>
+                          ? <><RiBriefcaseLine size={14} /> Work</>
+                          : <><RiCupLine size={14} /> Break</>
                         }
                       </span>
                       <span className="tl-duration mono">
@@ -344,9 +353,9 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
                       {isThisDeleting ? (
                         <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
                       ) : isPendingThis ? (
-                        <i className="ri-close-line" />
+                        <RiCloseLine size={16} />
                       ) : (
-                        <i className="ri-delete-bin-line" />
+                        <RiDeleteBinLine size={16} />
                       )}
                     </button>
                   )}
@@ -359,7 +368,7 @@ export default function DayDetailModal({ date, events, onClose, onRefresh }: Pro
         {/* Footer hint */}
         {timeline.length > 0 && !pendingDelete && !deletingId && (
           <p className="dm-footer-hint">
-            <i className="ri-delete-bin-line" /> Click the delete icon on any session or break to remove it
+            <RiDeleteBinLine size={14} /> Click the delete icon on any session or break to remove it
           </p>
         )}
       </div>

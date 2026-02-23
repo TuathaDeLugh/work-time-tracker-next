@@ -23,6 +23,7 @@ export interface TimerState {
     lastStatusChange: number | null;
     status: TimerStatus;
     logs: TimerLog[];
+    hasFiredOtNotification?: boolean;
 }
 
 const defaultState: TimerState = {
@@ -35,6 +36,7 @@ const defaultState: TimerState = {
     lastStatusChange: null,
     status: "idle",
     logs: [],
+    hasFiredOtNotification: false,
 };
 
 export function formatTime(ms: number): string {
@@ -102,6 +104,7 @@ async function loadTimerStateFromBackend(): Promise<TimerState | null> {
                     lastStatusChange: data.lastStatusChange,
                     status: data.status as TimerStatus,
                     logs: Array.isArray(data.logs) ? data.logs : [],
+                    hasFiredOtNotification: data.hasFiredOtNotification || false,
                 };
             }
         }
@@ -161,13 +164,45 @@ export function useWorkTimer(initialState: TimerState | null = null) {
     useEffect(() => {
         if (state.isActive) {
             intervalRef.current = setInterval(() => {
-                setCurrentTime(Date.now());
+                const nowMs = Date.now();
+                setCurrentTime(nowMs);
+
+                // Notification check
+                const currentWork = state.status === "working" && state.lastStatusChange ? nowMs - state.lastStatusChange : 0;
+                const totalWorkNow = state.accumulatedWorkMs + currentWork;
+                
+                if (state.status === "working" && !state.hasFiredOtNotification && state.targetWorkMs > 0 && totalWorkNow >= state.targetWorkMs) {
+                    setState(prev => ({ ...prev, hasFiredOtNotification: true }));
+                    
+                    fetch("/api/user/profile")
+                        .then(res => res.json())
+                        .then(user => {
+                            if (user?.notificationsEnabled !== false && "Notification" in window) {
+                                if (Notification.permission === "granted") {
+                                    new Notification("Workday Complete!", {
+                                        body: "You have completed your target hours and are now entering Overtime.",
+                                        icon: "/favicon.ico",
+                                    });
+                                } else if (Notification.permission !== "denied") {
+                                    Notification.requestPermission().then(permission => {
+                                        if (permission === "granted") {
+                                            new Notification("Workday Complete!", {
+                                                body: "You have completed your target hours and are now entering Overtime.",
+                                                icon: "/favicon.ico",
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        })
+                        .catch(err => console.error("Error fetching notification preference:", err));
+                }
             }, 1000);
         }
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [state.isActive]);
+    }, [state.isActive, state.status, state.lastStatusChange, state.accumulatedWorkMs, state.targetWorkMs, state.hasFiredOtNotification]);
 
     // Auto-sync every 5 minutes to PostgreSQL
     useEffect(() => {

@@ -204,7 +204,7 @@ export default function CalendarClient({ initialEvents }: CalendarClientProps) {
             className="btn-add-record"
             onClick={() => setShowManualModal(true)}
           >
-            📋 Add Past Day Record
+            Add Past Day Record
           </button>
         </div>
       </div>

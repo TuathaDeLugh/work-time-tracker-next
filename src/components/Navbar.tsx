@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
 
   if (!session) return null;
 
@@ -49,13 +51,40 @@ export default function Navbar() {
         <div className="navbar-right">
           <ThemeToggle />
           <div className="navbar-user">
+          <Link
+            href="/settings"
+            className={`nav-link ${pathname === "/settings" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
             <span className="user-name">{session.user?.name || session.user?.email}</span>
-            <button onClick={() => signOut()} className="btn-logout">
+          </Link>
+            <button onClick={() => setIsSignoutModalOpen(true)} className="btn-logout">
               Sign out
             </button>
           </div>
         </div>
       </div>
+
+      {isSignoutModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsSignoutModalOpen(false)}>
+          <div className="modal-card animate-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header modal-header-centered">
+              <h2>Sign Out</h2>
+            </div>
+            <div className="modal-body" style={{ textAlign: "center", padding: "20px 0" }}>
+              <p>Are you sure you want to sign out from your session?</p>
+            </div>
+            <div className="modal-footer" style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsSignoutModalOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn-danger" style={{ flex: 1 }} onClick={() => signOut()}>
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

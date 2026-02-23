@@ -9,12 +9,13 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(cuid())
-  name       String?
-  email      String      @unique
-  password   String
-  workLogs   WorkLog[]
-  timerState TimerState?
+  id                   String      @id @default(cuid())
+  name                 String?
+  email                String      @unique
+  password             String
+  notificationsEnabled Boolean     @default(true)
+  workLogs             WorkLog[]
+  timerState           TimerState?
   createdAt  DateTime    @default(now())
 }
 

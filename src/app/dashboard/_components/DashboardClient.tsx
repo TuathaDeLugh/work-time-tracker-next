@@ -8,6 +8,22 @@ import {
   TimerStatus,
   TimerState,
 } from "@/hooks/useWorkTimer";
+import {
+  RiCupLine,
+  RiCheckLine,
+  RiPlayCircleLine,
+  RiPlayFill,
+  RiTimeLine,
+  RiCalendarLine,
+  RiArrowRightLine,
+  RiRocketLine,
+  RiRecordCircleFill,
+  RiPauseCircleFill,
+  RiPauseFill,
+  RiErrorWarningLine,
+  RiDeleteBinLine,
+  RiRefreshLine
+} from "@remixicon/react";
 
 interface DashboardClientProps {
   initialTimerState: TimerState | null;
@@ -80,7 +96,7 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header-centered">
           <span className="modal-icon">
-            <i className="ri-cup-line" />
+            <RiCupLine size={24} />
           </span>
           <h2>Add Break Entry</h2>
           <p className="modal-subtitle">Manually record a break you already took (any time today)</p>
@@ -118,7 +134,7 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              <i className="ri-check-line" /> Add Break
+              <RiCheckLine size={18} /> Add Break
             </button>
           </div>
         </form>
@@ -149,7 +165,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
       <div className="modal-card modal-card-sm" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header-centered">
           <span className="modal-icon">
-            <i className="ri-play-circle-line" />
+            <RiPlayCircleLine size={24} />
           </span>
           <h2>Resume Work</h2>
           <p className="modal-subtitle">Set the time you actually resumed working</p>
@@ -174,7 +190,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-punch-in">
-              <i className="ri-play-fill" /> Start Working
+              <RiPlayFill size={18} /> Start Working
             </button>
           </div>
         </form>
@@ -190,14 +206,14 @@ function SessionPanel({ logs, status }: { logs: TimerLog[]; status: TimerStatus 
   return (
     <div className="session-panel glass-card animate-in">
       <div className="session-panel-header">
-        <i className="ri-time-line session-panel-icon" />
+        <RiTimeLine className="session-panel-icon" size={20} />
         <span className="session-panel-title">Today&apos;s Sessions</span>
         <span className="session-panel-count">{rows.length}</span>
       </div>
 
       {rows.length === 0 ? (
         <div className="session-panel-empty">
-          <i className="ri-calendar-line" />
+          <RiCalendarLine size={24} />
           <span>No sessions yet</span>
         </div>
       ) : (
@@ -216,7 +232,7 @@ function SessionPanel({ logs, status }: { logs: TimerLog[]; status: TimerStatus 
                 <div className="session-panel-num">{i + 1}</div>
                 <div className="session-panel-times">
                   <span className="session-panel-time mono">{fmtTime(row.punchIn)}</span>
-                  <i className="ri-arrow-right-line session-panel-arrow" />
+                  <RiArrowRightLine className="session-panel-arrow" size={14} />
                   <span className="session-panel-time mono">
                     {row.punchOut
                       ? fmtTime(row.punchOut)
@@ -414,7 +430,7 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
             </div>
 
             <button onClick={handleStartDay} className="btn-primary btn-full">
-              <i className="ri-rocket-line" /> Start Day
+              <RiRocketLine size={18} /> Start Day
             </button>
           </div>
         ) : (
@@ -425,8 +441,8 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
               <div className="dash-header">
                 <span className={`status-badge ${state.status === "working" ? "working" : "on-break"}`}>
                   {state.status === "working"
-                    ? <><i className="ri-record-circle-fill" /> Working</>
-                    : <><i className="ri-pause-circle-fill" /> On Break</>
+                    ? <><RiRecordCircleFill size={14} /> Working</>
+                    : <><RiPauseCircleFill size={14} /> On Break</>
                   }
                 </span>
                 <span className="clock-display mono">{timeStr}</span>
@@ -488,19 +504,19 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
                 {state.status === "working" ? (
                   <>
                     <button onClick={() => punchToggle()} className="btn-punch-out btn-full">
-                      <i className="ri-pause-fill" /> Punch Out
+                      <RiPauseFill size={20} /> Punch Out
                     </button>
                     <button onClick={() => setShowBreakModal(true)} className="btn-break btn-full">
-                      <i className="ri-cup-line" /> Add Break Entry
+                      <RiCupLine size={20} /> Add Break Entry
                     </button>
                   </>
                 ) : (
                   <>
                     <button onClick={() => punchToggle()} className="btn-punch-in btn-full">
-                      <i className="ri-play-fill" /> Punch In (Now)
+                      <RiPlayFill size={20} /> Punch In (Now)
                     </button>
                     <button onClick={() => setShowLatePunchInModal(true)} className="btn-late-punchin btn-full">
-                      <i className="ri-time-line" /> I Already Resumed — Set Time
+                      <RiTimeLine size={20} /> I Already Resumed — Set Time
                     </button>
                   </>
                 )}
@@ -508,7 +524,7 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
 
               <div className="danger-zone">
                 <div className="danger-zone-header">
-                  <i className="ri-error-warning-line" />
+                  <RiErrorWarningLine size={20} />
                   <span className="danger-zone-title">Danger Zone</span>
                 </div>
                 <div className="danger-actions">
@@ -520,10 +536,10 @@ export default function DashboardClient({ initialTimerState }: DashboardClientPr
                     }}
                     className="btn-danger-outline"
                   >
-                    <i className="ri-delete-bin-line" /> Clear Today
+                    <RiDeleteBinLine size={18} /> Clear Today
                   </button>
                   <button onClick={resetDay} className="btn-danger">
-                    <i className="ri-refresh-line" /> Reset Day
+                    <RiRefreshLine size={18} /> Reset Day
                   </button>
                 </div>
               </div>
