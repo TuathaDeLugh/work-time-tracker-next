@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, JetBrains_Mono } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import "./globals.css";
+import "./globals.scss";
 import Navbar from "@/components/Navbar";
 
 const poppins = Poppins({

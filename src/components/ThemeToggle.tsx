@@ -6,9 +6,9 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   const modes: Array<{ value: "light" | "dark" | "system"; icon: string; label: string }> = [
-    { value: "light", icon: "☀️", label: "Light" },
-    { value: "dark", icon: "🌙", label: "Dark" },
-    { value: "system", icon: "💻", label: "System" },
+    { value: "light", icon: "ri-sun-line", label: "Light" },
+    { value: "dark", icon: "ri-moon-clear-line", label: "Dark" },
+    { value: "system", icon: "ri-computer-line", label: "System" },
   ];
 
   return (
@@ -20,7 +20,7 @@ export default function ThemeToggle() {
           onClick={() => setTheme(mode.value)}
           title={mode.label}
         >
-          <span className="theme-btn-icon">{mode.icon}</span>
+          <i className={`theme-btn-icon ${mode.icon}`}></i>
           {/* <span className="theme-btn-label">{mode.label}</span> */}
         </button>
       ))}

@@ -139,7 +139,7 @@ export default function ManualEntryPanel({ onRefresh }: Props) {
   };
 
   return (
-    <div className="manual-entry-panel glass-card animate-in">
+    <div className="manual-entry-panel animate-in">
       {/* Panel Header */}
       <div className="mep-header">
         <div className="mep-header-icon">📋</div>

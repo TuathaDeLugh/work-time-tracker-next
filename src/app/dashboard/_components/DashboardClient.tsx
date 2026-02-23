@@ -78,7 +78,7 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <div className="modal-header-centered">
           <span className="modal-icon">
             <i className="ri-cup-line" />
           </span>
@@ -147,7 +147,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card modal-card-sm" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+        <div className="modal-header-centered">
           <span className="modal-icon">
             <i className="ri-play-circle-line" />
           </span>
