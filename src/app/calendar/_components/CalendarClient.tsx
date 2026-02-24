@@ -125,8 +125,8 @@ export default function CalendarClient({
           : `/api/worklog`;
 
         const queryParams = [];
-        if (startDate) queryParams.push(`startDate=${startDate}`);
-        if (endDate) queryParams.push(`endDate=${endDate}`);
+        if (startDate) queryParams.push(`startDate=${encodeURIComponent(startDate)}`);
+        if (endDate) queryParams.push(`endDate=${encodeURIComponent(endDate)}`);
 
         if (queryParams.length > 0) {
           url += `?${queryParams.join("&")}`;
@@ -155,6 +155,9 @@ export default function CalendarClient({
   const handleDatesSet = (dateInfo: { startStr: string; endStr: string }) => {
     if (!fetchedRef.current) {
       fetchedRef.current = true;
+      if (adminUserId) {
+        fetchLogs(dateInfo.startStr, dateInfo.endStr);
+      }
       return;
     }
     fetchLogs(dateInfo.startStr, dateInfo.endStr);
