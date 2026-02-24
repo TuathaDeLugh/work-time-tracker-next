@@ -22,6 +22,13 @@ const FullCalendar = dynamic(() => import("@fullcalendar/react"), {
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
+interface Holiday {
+  id: string;
+  name: string;
+  date: string;
+  durationMinutes: number | null;
+}
+
 interface WorkLog {
   id: string;
   date: string;
@@ -77,6 +84,7 @@ export default function CalendarClient({
 }: CalendarClientProps) {
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [dayModalDate, setDayModalDate] = useState<string | null>(null);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -132,7 +140,13 @@ export default function CalendarClient({
           url += `?${queryParams.join("&")}`;
         }
 
-        const res = await fetch(url);
+        const holidayUrl = `/api/holidays${queryParams.length > 0 ? `?${queryParams.join("&")}` : ""}`;
+
+        const [res, holRes] = await Promise.all([
+          fetch(url),
+          fetch(holidayUrl),
+        ]);
+
         if (res.ok) {
           const fetchedEvents: CalendarEvent[] = await res.json();
           setEvents(fetchedEvents);
@@ -142,6 +156,11 @@ export default function CalendarClient({
           setLogs(
             Array.from(new Map(extracted.map((l) => [l.id, l])).values()),
           );
+        }
+
+        if (holRes.ok) {
+          const fetchedHolidays: Holiday[] = await holRes.json();
+          setHolidays(fetchedHolidays);
         }
       } catch (err) {
         console.error("Failed to fetch logs:", err);
@@ -171,7 +190,6 @@ export default function CalendarClient({
     setDayModalDate(dateStr);
   };
 
-  // ── Daily summary map: date → { workMs, breakMs, hasActive } ─
   const dailySummaryMap = useMemo(() => {
     const map: Record<
       string,
@@ -195,6 +213,15 @@ export default function CalendarClient({
     });
     return map;
   }, [events]);
+
+  const holidaysMap = useMemo(() => {
+    const map: Record<string, Holiday> = {};
+    holidays.forEach((h) => {
+      const dateStr = h.date.split("T")[0];
+      map[dateStr] = h;
+    });
+    return map;
+  }, [holidays]);
 
   // ── Month stats ──────────────────────────────────────────────
   const [stats, setStats] = useState({
@@ -273,6 +300,10 @@ export default function CalendarClient({
           headerToolbar={{ left: "prev,next", center: "title", right: "today" }}
           dayHeaderFormat={{ weekday: "long" }}
           dayCellClassNames={(arg) => {
+            const dateStr = arg.date.getFullYear() + "-" + String(arg.date.getMonth() + 1).padStart(2, "0") + "-" + String(arg.date.getDate()).padStart(2, "0");
+            const hol = holidaysMap[dateStr];
+            if (hol && hol.durationMinutes === null) return ["fc-unavailable-day"];
+
             const day = arg.date.getDay();
             if (day === 0) return ["fc-unavailable-day"];
             if (day === 6) {
@@ -288,6 +319,7 @@ export default function CalendarClient({
             const d = String(arg.date.getDate()).padStart(2, "0");
             const dateStr = `${y}-${mo}-${d}`;
             const summary = dailySummaryMap[dateStr];
+            const hol = holidaysMap[dateStr];
             
             let overtimeMs = 0;
             let earlyMs = 0;
@@ -295,18 +327,29 @@ export default function CalendarClient({
             const day = arg.date.getDay();
             const weekNumber = Math.ceil(arg.date.getDate() / 7);
             const isOffDay = day === 0 || (day === 6 && [1, 3, 5].includes(weekNumber));
+            const isFullDayHoliday = hol && hol.durationMinutes === null;
 
             if (summary && summary.workMs > 60000) {
-              if (isOffDay) {
+              if (isOffDay || isFullDayHoliday) {
                 overtimeMs = summary.workMs;
               } else {
-                if (summary.workMs > workDurationMs) {
-                  overtimeMs = summary.workMs - workDurationMs;
+                let effectiveWorkDurationMs = workDurationMs;
+                let applyEgCooldown = true;
+
+                if (hol && hol.durationMinutes !== null) {
+                  effectiveWorkDurationMs = Math.max(0, workDurationMs - (hol.durationMinutes * 60000));
+                  applyEgCooldown = false;
+                }
+
+                if (summary.workMs > effectiveWorkDurationMs) {
+                  overtimeMs = summary.workMs - effectiveWorkDurationMs;
                 } else if (
-                  summary.workMs < workDurationMs - 30 * 60000 &&
-                  !summary.hasActive
+                  !summary.hasActive &&
+                  (applyEgCooldown 
+                    ? summary.workMs < effectiveWorkDurationMs - 30 * 60000
+                    : summary.workMs < effectiveWorkDurationMs)
                 ) {
-                  earlyMs = workDurationMs - summary.workMs;
+                  earlyMs = effectiveWorkDurationMs - summary.workMs;
                 }
               }
             }
@@ -316,7 +359,7 @@ export default function CalendarClient({
             }
 
             return (
-              <div className="fc-day-cell-inner">
+              <div className={`fc-day-cell-inner ${hol ? "has-holiday" : ""}`}>
                 <span className="fc-daygrid-day-number">
                   {arg.dayNumberText}
                 </span>
@@ -343,6 +386,18 @@ export default function CalendarClient({
                     )}
                   </div>
                 )}
+                {hol && (
+                  <div className="doc-holiday-wrapper">
+                    <div className={`doc-holiday ${hol.durationMinutes === null ? 'doc-holiday-full' : 'doc-holiday-partial'}`}>
+                    {hol.durationMinutes !== null && (
+                      <span>
+                        ({Math.floor(hol.durationMinutes / 60)}h {hol.durationMinutes % 60}m) 
+                      </span>
+                    )}
+                    {hol.name} 
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }}
@@ -364,6 +419,8 @@ export default function CalendarClient({
           events={events}
           timeFormat={timeFormat || "12h"}
           onClose={() => setDayModalDate(null)}
+          holiday={holidaysMap[dayModalDate]}
+          workDurationMs={workDurationMs}
           onRefresh={() => {
             fetchLogs();
             setDayModalDate(null);

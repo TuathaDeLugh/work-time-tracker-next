@@ -69,3 +69,14 @@ model Notification {
 
   @@index([userId, isRead])
 }
+
+model Holiday {
+  id              String   @id @default(cuid())
+  name            String
+  date            DateTime
+  durationMinutes Int?     // null means Full Day, otherwise represents custom hh:mm in minutes
+  adminId         String?  // the admin who created it
+  createdAt       DateTime @default(now())
+
+  @@index([date])
+}

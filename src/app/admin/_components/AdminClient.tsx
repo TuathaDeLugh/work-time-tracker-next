@@ -8,10 +8,11 @@ import {
   RiUserAddLine,
   RiCheckLine,
   RiErrorWarningLine,
+  RiCalendarEventLine,
 } from "@remixicon/react";
 import CalendarClient from "@/app/calendar/_components/CalendarClient";
 
-type Tab = "timelogs" | "notifications" | "admins";
+type Tab = "timelogs" | "notifications" | "admins" | "holidays";
 
 type AdminUser = {
   id: string;
@@ -51,76 +52,30 @@ export default function AdminClient({
         </p>
       </div>
 
-      <div
-        className="admin-tabs"
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "24px",
-          borderBottom: "1px solid var(--card-border)",
-          paddingBottom: "12px",
-        }}
-      >
+      <div className="admin-tabs">
         <button
           className={`tab-btn ${activeTab === "timelogs" ? "active" : ""}`}
           onClick={() => setActiveTab("timelogs")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "8px",
-            background:
-              activeTab === "timelogs"
-                ? "var(--accent-primary)"
-                : "transparent",
-            color: activeTab === "timelogs" ? "#fff" : "var(--text-main)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontWeight: 600,
-          }}
         >
           <RiCalendarLine size={18} /> User Timelogs
         </button>
         <button
           className={`tab-btn ${activeTab === "notifications" ? "active" : ""}`}
           onClick={() => setActiveTab("notifications")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "8px",
-            background:
-              activeTab === "notifications"
-                ? "var(--accent-primary)"
-                : "transparent",
-            color: activeTab === "notifications" ? "#fff" : "var(--text-main)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontWeight: 600,
-          }}
         >
           <RiNotification3Line size={18} /> Announcements
         </button>
         <button
           className={`tab-btn ${activeTab === "admins" ? "active" : ""}`}
           onClick={() => setActiveTab("admins")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "8px",
-            background:
-              activeTab === "admins" ? "var(--accent-primary)" : "transparent",
-            color: activeTab === "admins" ? "#fff" : "var(--text-main)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontWeight: 600,
-          }}
         >
           <RiUserAddLine size={18} /> Access Control
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "holidays" ? "active" : ""}`}
+          onClick={() => setActiveTab("holidays")}
+        >
+          <RiCalendarEventLine size={18} /> Holidays
         </button>
       </div>
 
@@ -128,6 +83,7 @@ export default function AdminClient({
         {activeTab === "timelogs" && <UserTimelogsTab timeFormat={timeFormat} />}
         {activeTab === "notifications" && <PushNotificationsTab />}
         {activeTab === "admins" && <AdminsTab currentUserId={currentUserId} />}
+        {activeTab === "holidays" && <ManageHolidaysTab />}
       </div>
     </div>
   );
@@ -642,6 +598,201 @@ function AdminsTab({ currentUserId }: { currentUserId: string }) {
               </td>
             </tr>
           ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+type Holiday = {
+  id: string;
+  name: string;
+  date: string;
+  durationMinutes: number | null;
+  createdAt: string;
+};
+
+function ManageHolidaysTab() {
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [date, setDate] = useState("");
+  const [type, setType] = useState<"full" | "partial">("full");
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutesStr, setDurationMinutesStr] = useState(0);
+
+  const fetchHolidays = () => {
+    fetch("/api/admin/holidays")
+      .then((res) => res.json())
+      .then((data) => {
+        setHolidays(data);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchHolidays();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const durationMinutes =
+        type === "full" ? null : durationHours * 60 + durationMinutesStr;
+      
+      const res = await fetch("/api/admin/holidays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, date, durationMinutes }),
+      });
+
+      if (res.ok) {
+        setName("");
+        setDate("");
+        setType("full");
+        fetchHolidays();
+      } else {
+        alert("Failed to create holiday");
+      }
+    } catch {
+      alert("Error creating holiday");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string, holidayName: string) => {
+    if (!confirm(`Are you sure you want to delete the holiday: ${holidayName}?`)) return;
+
+    try {
+      await fetch(`/api/admin/holidays/${id}`, { method: "DELETE" });
+      fetchHolidays();
+    } catch {
+      alert("Failed to delete holiday");
+    }
+  };
+
+  if (loading && holidays.length === 0)
+    return (
+      <div className="page-loader">
+        <div className="loader-spinner" />
+      </div>
+    );
+
+  return (
+    <div className="glass-card animate-in">
+      <h2>Manage Holidays</h2>
+      <p className="text-muted" style={{ marginBottom: "20px" }}>
+        Add global holidays that reflect on every users calendar.
+      </p>
+
+      <form onSubmit={handleSubmit} className="manage-holidays-form">
+        <div className="holidays-form-row">
+          <div className="form-group">
+            <label>Holiday Name</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. New Year"
+            />
+          </div>
+          <div className="form-group">
+            <label>Date</label>
+            <input
+              type="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="holidays-form-row">
+          <div className="form-group">
+            <label>Type</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as "full" | "partial")}
+            >
+              <option value="full">Full Day (All work counts as OT)</option>
+              <option value="partial">Partial Day (Custom Work Hours)</option>
+            </select>
+          </div>
+
+          {type === "partial" && (
+            <div className="form-group">
+              <label>Holiday Duration</label>
+              <div className="duration-inputs">
+                <input
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={durationHours}
+                  onChange={(e) => setDurationHours(parseInt(e.target.value) || 0)}
+                  placeholder="Hrs"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={durationMinutesStr}
+                  onChange={(e) => setDurationMinutesStr(parseInt(e.target.value) || 0)}
+                  placeholder="Mins"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="form-actions">
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? "Adding..." : "Add Holiday"}
+          </button>
+        </div>
+      </form>
+
+      <table className="session-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {holidays?.map((h) => (
+            <tr key={h.id}>
+              <td style={{ fontWeight: 600 }}>{h.name}</td>
+              <td>{new Date(h.date).toLocaleDateString()}</td>
+              <td>
+                {h.durationMinutes === null ? (
+                  <span className="status-badge holiday-full">Full Day</span>
+                ) : (
+                  <span className="status-badge holiday-partial">
+                    Partial ({Math.floor(h.durationMinutes / 60)}h {h.durationMinutes % 60}m)
+                  </span>
+                )}
+              </td>
+              <td>
+                <button
+                  className="btn-secondary btn-delete-sm"
+                  onClick={() => handleDelete(h.id, h.name)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+          {holidays.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ textAlign: "center", fontStyle: "italic", padding: "20px" }}>No holidays found.</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
