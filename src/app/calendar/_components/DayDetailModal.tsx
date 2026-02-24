@@ -60,6 +60,7 @@ interface Props {
   events: CalendarEvent[];
   timeFormat: string;
   workDurationMs?: number;
+  holiday?: { name: string; durationMinutes: number | null };
   onClose: () => void;
   onRefresh: () => void;
 }
@@ -92,6 +93,7 @@ export default function DayDetailModal({
   events,
   timeFormat,
   workDurationMs = 8 * 3600000,
+  holiday,
   onClose,
   onRefresh,
 }: Props) {
@@ -157,17 +159,29 @@ export default function DayDetailModal({
   const weekNumber = Math.ceil(dateNum / 7);
   const isOffDay = dayOfWeek === 0 || (dayOfWeek === 6 && [1, 3, 5].includes(weekNumber));
 
+  const isFullDayHoliday = holiday && holiday.durationMinutes === null;
+
   if (totalWork > 0) {
-    if (isOffDay) {
+    if (isOffDay || isFullDayHoliday) {
       overtimeMs = totalWork;
     } else {
-      if (totalWork > workDurationMs) {
-        overtimeMs = totalWork - workDurationMs;
+      let effectiveWorkDurationMs = workDurationMs;
+      let applyEgCooldown = true;
+
+      if (holiday && holiday.durationMinutes !== null) {
+        effectiveWorkDurationMs = Math.max(0, workDurationMs - (holiday.durationMinutes * 60000));
+        applyEgCooldown = false;
+      }
+
+      if (totalWork > effectiveWorkDurationMs) {
+        overtimeMs = totalWork - effectiveWorkDurationMs;
       } else if (
-        totalWork < workDurationMs - 30 * 60000 &&
-        !hasActiveWork
+        !hasActiveWork &&
+        (applyEgCooldown
+          ? totalWork < effectiveWorkDurationMs - 30 * 60000
+          : totalWork < effectiveWorkDurationMs)
       ) {
-        earlyMs = workDurationMs - totalWork;
+        earlyMs = effectiveWorkDurationMs - totalWork;
       }
     }
   }
@@ -299,7 +313,24 @@ export default function DayDetailModal({
         {/* Header */}
         <div className="day-modal-header">
           <div className="day-modal-title-block">
-            <p className="day-modal-date">{displayDate}</p>
+            <p className="day-modal-date">
+              {displayDate}
+              {holiday && holiday.durationMinutes === null && (
+                <span className="dmt-chip dmt-holiday-full">
+                  {holiday.name}
+                </span>
+              )}
+              {isOffDay && !holiday && (
+                <span className="dmt-chip dmt-holiday-full">
+                  Work-Off
+                </span>
+              )}
+              {holiday && holiday.durationMinutes !== null && (
+                <span className="dmt-holiday-partial dmt-chip">
+                  {holiday.name} ({Math.floor(holiday.durationMinutes / 60)}h {holiday.durationMinutes % 60}m)
+                </span>
+              )}
+            </p>
             <div className="day-modal-totals">
               {totalWork > 0 && (
                 <span className="dmt-chip dmt-work">

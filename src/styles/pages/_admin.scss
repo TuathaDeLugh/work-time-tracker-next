@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL
+   ═══════════════════════════════════════════════ */
+
+.admin-header {
+    margin-bottom: 24px;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 12px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-main);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    transition: all var(--transition);
+
+    &:hover {
+        background: var(--slate-bg);
+    }
+
+    &.active {
+        background: var(--accent-primary);
+        color: #fff;
+    }
+}
+
+.manage-holidays-form {
+    margin-bottom: 32px;
+    padding: 20px;
+    background: var(--card-bg-light);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+
+    .holidays-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+    }
+
+    .duration-inputs {
+        display: flex;
+        gap: 10px;
+
+        input {
+            width: 50%;
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+
+        .btn-primary {
+            padding: 10px 20px;
+        }
+    }
+}
+
+.status-badge {
+    &.holiday-full {
+        background: var(--slate-bg);
+        color: var(--text-muted);
+    }
+
+    &.holiday-partial {
+        background: var(--accent-subtle);
+        color: var(--accent-primary);
+    }
+}
+
+.btn-delete-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--danger);
+    border-color: rgba(229, 77, 77, 0.3);
+
+    &:hover {
+        background: var(--danger-bg);
+    }
+}
