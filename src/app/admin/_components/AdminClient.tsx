@@ -768,7 +768,15 @@ function ManageHolidaysTab() {
           {holidays?.map((h) => (
             <tr key={h.id}>
               <td style={{ fontWeight: 600 }}>{h.name}</td>
-              <td>{new Date(h.date).toLocaleDateString()}</td>
+              <td>
+                {(() => {
+                  if (!h.date) return "";
+                  const dateStr = h.date.split("T")[0];
+                  if (!dateStr.includes("-")) return new Date(h.date).toLocaleDateString();
+                  const [y, m, d] = dateStr.split("-");
+                  return `${y}-${m}-${d}`;
+                })()}
+              </td>
               <td>
                 {h.durationMinutes === null ? (
                   <span className="status-badge holiday-full">Full Day</span>

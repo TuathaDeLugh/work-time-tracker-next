@@ -492,7 +492,7 @@ export default function DashboardClient({
             </div>
 
             <div className="form-group">
-              <label>Entry Time</label>
+              <label>Entry Time(starting time of work)</label>
               <input
                 type="time"
                 id="entryTime"

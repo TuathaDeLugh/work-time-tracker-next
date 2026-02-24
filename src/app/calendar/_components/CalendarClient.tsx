@@ -172,11 +172,15 @@ export default function CalendarClient({
   );
 
   const handleDatesSet = (dateInfo: { startStr: string; endStr: string }) => {
-    if (!fetchedRef.current) {
+    if (!fetchedRef.current && !adminUserId) {
+      fetchLogs(dateInfo.startStr, dateInfo.endStr);
       fetchedRef.current = true;
-      if (adminUserId) {
-        fetchLogs(dateInfo.startStr, dateInfo.endStr);
-      }
+      return;
+    }
+    
+    if (!fetchedRef.current && adminUserId) {
+      fetchedRef.current = true;
+      fetchLogs(dateInfo.startStr, dateInfo.endStr);
       return;
     }
     fetchLogs(dateInfo.startStr, dateInfo.endStr);
@@ -217,8 +221,12 @@ export default function CalendarClient({
   const holidaysMap = useMemo(() => {
     const map: Record<string, Holiday> = {};
     holidays.forEach((h) => {
-      const dateStr = h.date.split("T")[0];
-      map[dateStr] = h;
+      const dateObj = new Date(h.date);
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dateObj.getDate()).padStart(2, "0");
+      const localDateStr = `${y}-${m}-${d}`;
+      map[localDateStr] = h;
     });
     return map;
   }, [holidays]);
