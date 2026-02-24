@@ -59,6 +59,7 @@ interface CalendarEvent {
 
 interface CalendarClientProps {
   initialEvents: CalendarEvent[];
+  initialHolidays?: Holiday[];
   adminUserId?: string;
   timeFormat?: string;
   workDurationMs?: number;
@@ -78,13 +79,14 @@ function msFmt(ms: number): string {
 // ─── Main Component ───────────────────────────────────────────
 export default function CalendarClient({
   initialEvents,
+  initialHolidays = [],
   adminUserId,
   timeFormat,
   workDurationMs = 8 * 3600000, // Fallback to 8 hrs if undefined
 }: CalendarClientProps) {
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>(initialHolidays);
   const [dataLoading, setDataLoading] = useState(false);
   const [dayModalDate, setDayModalDate] = useState<string | null>(null);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -172,15 +174,11 @@ export default function CalendarClient({
   );
 
   const handleDatesSet = (dateInfo: { startStr: string; endStr: string }) => {
-    if (!fetchedRef.current && !adminUserId) {
-      fetchLogs(dateInfo.startStr, dateInfo.endStr);
+    if (!fetchedRef.current) {
       fetchedRef.current = true;
-      return;
-    }
-    
-    if (!fetchedRef.current && adminUserId) {
-      fetchedRef.current = true;
-      fetchLogs(dateInfo.startStr, dateInfo.endStr);
+      if (adminUserId) {
+        fetchLogs(dateInfo.startStr, dateInfo.endStr);
+      }
       return;
     }
     fetchLogs(dateInfo.startStr, dateInfo.endStr);
