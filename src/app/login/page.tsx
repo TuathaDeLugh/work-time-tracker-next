@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { vibeClient } from "@/lib/vibe-client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,6 +29,13 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
+        try {
+          if (vibeClient) {
+            await vibeClient.registerDevice({ externalUserId: email });
+          }
+        } catch (pushErr) {
+          console.error("Failed to register push notifications:", pushErr);
+        }
         router.push("/dashboard");
         router.refresh();
       }
