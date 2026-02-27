@@ -51,6 +51,37 @@ export async function getUserProfile(userId: string) {
   }
 }
 
+export async function getHolidays(startDate?: string, endDate?: string) {
+  try {
+    const where: Record<string, unknown> = {};
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        where.date = {
+          gte: start,
+          lte: end,
+        };
+      }
+    }
+
+    const holidays = await prisma.holiday.findMany({
+      where,
+      orderBy: { date: "asc" },
+    });
+
+    return holidays.map((h) => ({
+      ...h,
+      date: h.date.toISOString(),
+      createdAt: h.createdAt.toISOString(),
+    }));
+  } catch (error) {
+    console.error("Get holidays error:", error);
+    return [];
+  }
+}
+
 export async function getWorkLogs(
   userId: string,
   startDate?: string,

@@ -59,6 +59,7 @@ interface CalendarEvent {
 
 interface CalendarClientProps {
   initialEvents: CalendarEvent[];
+  initialHolidays?: Holiday[];
   adminUserId?: string;
   timeFormat?: string;
   workDurationMs?: number;
@@ -78,13 +79,14 @@ function msFmt(ms: number): string {
 // ─── Main Component ───────────────────────────────────────────
 export default function CalendarClient({
   initialEvents,
+  initialHolidays = [],
   adminUserId,
   timeFormat,
   workDurationMs = 8 * 3600000, // Fallback to 8 hrs if undefined
 }: CalendarClientProps) {
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>(initialHolidays);
   const [dataLoading, setDataLoading] = useState(false);
   const [dayModalDate, setDayModalDate] = useState<string | null>(null);
   const [showManualModal, setShowManualModal] = useState(false);
@@ -217,8 +219,12 @@ export default function CalendarClient({
   const holidaysMap = useMemo(() => {
     const map: Record<string, Holiday> = {};
     holidays.forEach((h) => {
-      const dateStr = h.date.split("T")[0];
-      map[dateStr] = h;
+      const dateObj = new Date(h.date);
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dateObj.getDate()).padStart(2, "0");
+      const localDateStr = `${y}-${m}-${d}`;
+      map[localDateStr] = h;
     });
     return map;
   }, [holidays]);

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getWorkLogs, getUserProfile } from "@/lib/api-services";
+import { getWorkLogs, getUserProfile, getHolidays } from "@/lib/api-services";
 import CalendarClient from "./_components/CalendarClient";
 
 export default async function CalendarPage() {
@@ -12,6 +12,7 @@ export default async function CalendarPage() {
 
   const events = await getWorkLogs(session.user.id);
   const userProfile = await getUserProfile(session.user.id);
+  const holidays = await getHolidays();
 
   const workDurationMs = userProfile 
     ? (userProfile.workHours * 3600000) + (userProfile.workMinutes * 60000)
@@ -20,6 +21,7 @@ export default async function CalendarPage() {
   return (
     <CalendarClient 
       initialEvents={events} 
+      initialHolidays={holidays}
       timeFormat={userProfile?.timeFormat || "12h"} 
       workDurationMs={workDurationMs}
     />
