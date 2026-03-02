@@ -157,6 +157,64 @@ function AddBreakModal({ onClose, onSubmit }: AddBreakModalProps) {
   );
 }
 
+// ─── Modal: Late Punch-Out ────────────────────────────────────
+interface LatePunchOutModalProps {
+  onClose: () => void;
+  onSubmit: (punchOut: string) => string | null;
+}
+
+function LatePunchOutModal({ onClose, onSubmit }: LatePunchOutModalProps) {
+  const [punchOut, setPunchOut] = useState(nowTimeStr());
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    const err = onSubmit(punchOut);
+    if (err) setError(err);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-centered">
+          <span className="modal-icon">
+            <RiPauseCircleFill size={24} />
+          </span>
+          <h2>Set Stop Time</h2>
+          <p className="modal-subtitle">
+            Set the time you actually stopped working
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="modal-form">
+          {error && <div className="auth-error">{error}</div>}
+
+          <div className="form-group">
+            <label htmlFor="latePunchOut">Stop Time</label>
+            <input
+              id="latePunchOut"
+              type="time"
+              value={punchOut}
+              onChange={(e) => setPunchOut(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-punch-out">
+              <RiPauseFill size={18} /> Stop Time
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Modal: Late Punch-In ─────────────────────────────────────
 interface LatePunchInModalProps {
   onClose: () => void;
@@ -177,7 +235,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-card modal-card-sm"
+        className="modal-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header-centered">
@@ -209,7 +267,7 @@ function LatePunchInModal({ onClose, onSubmit }: LatePunchInModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-punch-in">
-              <RiPlayFill size={18} /> Start Working
+              <RiPlayFill size={18} />Start time
             </button>
           </div>
         </form>
@@ -332,6 +390,7 @@ export default function DashboardClient({
 
   const [showBreakModal, setShowBreakModal] = useState(false);
   const [showLatePunchInModal, setShowLatePunchInModal] = useState(false);
+  const [showLatePunchOutModal, setShowLatePunchOutModal] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -412,6 +471,16 @@ export default function DashboardClient({
     return null;
   };
 
+  const handleLatePunchOut = (punchOutStr: string): string | null => {
+    if (state.status !== "working") return "You are not currently working.";
+    const punchOutMs = timeStrToMs(punchOutStr);
+    if (punchOutMs > Date.now()) return "Stop time cannot be in the future.";
+    const r = punchToggle(punchOutMs);
+    if (!r.success) return r.error ?? "Failed to stop time.";
+    setShowLatePunchOutModal(false);
+    return null;
+  };
+
   const handleLatePunchIn = (punchInStr: string): string | null => {
     if (state.status !== "break") return "You are not currently on break.";
     const punchInMs = timeStrToMs(punchInStr);
@@ -424,6 +493,12 @@ export default function DashboardClient({
 
   return (
     <>
+      {showLatePunchOutModal && (
+        <LatePunchOutModal
+          onClose={() => setShowLatePunchOutModal(false)}
+          onSubmit={handleLatePunchOut}
+        />
+      )}
       {showBreakModal && (
         <AddBreakModal
           onClose={() => setShowBreakModal(false)}
@@ -594,7 +669,13 @@ export default function DashboardClient({
                       onClick={() => punchToggle()}
                       className="btn-punch-out btn-full"
                     >
-                      <RiPauseFill size={20} /> Punch Out
+                      <RiPauseFill size={20} /> Punch Out (Now)
+                    </button>
+                    <button
+                      onClick={() => setShowLatePunchOutModal(true)}
+                      className="btn-late-punchin btn-full"
+                    >
+                      <RiTimeLine size={20} /> I Already Stopped — Set Time
                     </button>
                     <button
                       onClick={() => setShowBreakModal(true)}
