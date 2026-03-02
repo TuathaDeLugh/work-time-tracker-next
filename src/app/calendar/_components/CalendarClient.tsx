@@ -173,7 +173,17 @@ export default function CalendarClient({
     [adminUserId],
   );
 
+  const [currentMonth, setCurrentMonth] = useState<string>("");
+
   const handleDatesSet = (dateInfo: { startStr: string; endStr: string }) => {
+    const startObj = new Date(dateInfo.startStr);
+    const endObj = new Date(dateInfo.endStr);
+    const midPoint = new Date(startObj.getTime() + (endObj.getTime() - startObj.getTime()) / 2);
+    
+    const yyyy = midPoint.getFullYear();
+    const mm = String(midPoint.getMonth() + 1).padStart(2, "0");
+    setCurrentMonth(`${yyyy}-${mm}`);
+
     if (!fetchedRef.current) {
       fetchedRef.current = true;
       if (adminUserId) {
@@ -236,10 +246,13 @@ export default function CalendarClient({
     avgHoursPerDay: 0,
   });
   useEffect(() => {
+    if (!currentMonth) return;
     const daily: Record<string, number> = {};
     logs.forEach((log) => {
-      const day = log.date.split("T")[0];
-      daily[day] = (daily[day] || 0) + (log.totalHours || 0);
+      if (log.date.startsWith(currentMonth)) {
+        const day = log.date.split("T")[0];
+        daily[day] = (daily[day] || 0) + (log.totalHours || 0);
+      }
     });
     const totalHours = Object.values(daily).reduce((s, h) => s + h, 0);
     const totalDays = Object.keys(daily).length;
@@ -248,7 +261,7 @@ export default function CalendarClient({
       totalDaysWorked: totalDays,
       avgHoursPerDay: totalDays > 0 ? totalHours / totalDays : 0,
     });
-  }, [logs]);
+  }, [logs, currentMonth]);
 
   return (
     <main className="main-content calendar-page">

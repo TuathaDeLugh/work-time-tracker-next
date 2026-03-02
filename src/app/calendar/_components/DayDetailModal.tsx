@@ -302,6 +302,90 @@ export default function DayDetailModal({
     day: "numeric",
   });
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPunchIn, setEditPunchIn] = useState("");
+  const [editPunchOut, setEditPunchOut] = useState("");
+
+  const handleEditClick = (item: TimelineItem) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    setPendingDelete(null);
+    setDeletingId(null);
+    
+    setEditingId(item.logId!);
+    setEditPunchIn(new Date(item.start).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
+    if (item.end) {
+      setEditPunchOut(new Date(item.end).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
+    } else {
+      setEditPunchOut("");
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setErrorMsg("");
+  };
+
+  const executeEdit = async (item: TimelineItem) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!editPunchIn) {
+      setErrorMsg("Punch in time cannot be empty.");
+      return;
+    }
+
+    try {
+      const originalStartDate = new Date(item.start);
+      const newInTokens = editPunchIn.split(":");
+      originalStartDate.setHours(Number(newInTokens[0]), Number(newInTokens[1]), 0, 0);
+
+      let newOutDate: Date | null = null;
+      let totalHoursInput: number | null = null;
+      
+      if (editPunchOut) {
+        newOutDate = new Date(item.end || item.start);
+        const newOutTokens = editPunchOut.split(":");
+        newOutDate.setHours(Number(newOutTokens[0]), Number(newOutTokens[1]), 0, 0);
+
+        if (newOutDate < originalStartDate) {
+          setErrorMsg("Punch out time cannot be before punch in.");
+          return;
+        }
+
+        const durationMs = newOutDate.getTime() - originalStartDate.getTime();
+        totalHoursInput = parseFloat((durationMs / (1000 * 60 * 60)).toFixed(2));
+      }
+
+      setDeletingId(item.logId!); 
+
+      const res = await fetch("/api/worklog/update-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logId: item.logId,
+          newPunchIn: originalStartDate.toISOString(),
+          newPunchOut: newOutDate ? newOutDate.toISOString() : null,
+          totalHours: totalHoursInput,
+        }),
+      });
+
+      if (res.ok) {
+        setSuccessMsg("Session updated successfully.");
+        setEditingId(null);
+        onRefresh();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setErrorMsg(d.error || "Failed to update session.");
+      }
+    } catch (err) {
+      setErrorMsg("Network error trying to update session.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+
   // ── Render ───────────────────────────────────────────────────
 
   return (
@@ -411,6 +495,7 @@ export default function DayDetailModal({
               const isThisDeleting = deletingId === deleteKey;
               const isPendingThis =
                 pendingDelete?.item.key === item.key && !isThisDeleting;
+              const isEditingThis = editingId === item.logId;
               const isLast = idx === timeline.length - 1;
 
               return (
@@ -431,41 +516,84 @@ export default function DayDetailModal({
                     {!isLast && <div className="timeline-connector" />}
                   </div>
 
-                  <div className="timeline-body">
-                    <div className="timeline-times mono">
-                      <span>{fmtT(item.start, timeFormat)}</span>
-                      <RiArrowRightLine className="timeline-arrow" size={14} />
-                      <span>
-                        {item.isActive ? (
-                          <span className="session-ongoing">now</span>
-                        ) : (
-                          fmtT(item.end, timeFormat)
-                        )}
-                      </span>
-                    </div>
-                    <div className="timeline-meta-row">
-                      <span className={`tl-badge tl-badge-${item.type}`}>
-                        {item.type === "work" ? (
-                          <>
-                            <RiBriefcaseLine size={14} /> Work
-                          </>
-                        ) : (
-                          <>
-                            <RiCupLine size={14} /> Break
-                          </>
-                        )}
-                      </span>
-                      <span className="tl-duration mono">
-                        {fmtDur(item.durationMs)}
-                        {item.isActive && (
-                          <span
-                            className="tl-active-dot"
-                            title="Active session"
+                  <div className="timeline-body" style={{ width: "100%" }}>
+                    
+                    {isEditingThis ? (
+                      <div className="modal-time-row" style={{ marginTop: "4px", marginBottom: "8px" }}>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <input
+                            type="time"
+                            value={editPunchIn}
+                            onChange={(e) => setEditPunchIn(e.target.value)}
+                            style={{ padding: "6px" }}
                           />
+                        </div>
+                        <div className="modal-time-arrow" style={{ paddingBottom: "10px" }}>→</div>
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <input
+                            type="time"
+                            value={editPunchOut}
+                            onChange={(e) => setEditPunchOut(e.target.value)}
+                            disabled={item.isActive}
+                            style={{ padding: "6px" }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="timeline-times mono">
+                        <span>{fmtT(item.start, timeFormat)}</span>
+                        <RiArrowRightLine className="timeline-arrow" size={14} />
+                        <span>
+                          {item.isActive ? (
+                            <span className="session-ongoing">now</span>
+                          ) : (
+                            fmtT(item.end, timeFormat)
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="timeline-meta-row" style={{ justifyContent: "space-between" }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span className={`tl-badge tl-badge-${item.type}`}>
+                          {item.type === "work" ? (
+                            <>
+                              <RiBriefcaseLine size={14} /> Work
+                            </>
+                          ) : (
+                            <>
+                              <RiCupLine size={14} /> Break
+                            </>
+                          )}
+                        </span>
+                        
+                        {!isEditingThis && (
+                          <span className="tl-duration mono">
+                            {fmtDur(item.durationMs)}
+                            {item.isActive && (
+                              <span
+                                className="tl-active-dot"
+                                title="Active session"
+                              />
+                            )}
+                          </span>
                         )}
-                      </span>
+                      </div>
+
+                      {/* Editing Actions inline */}
+                      {isEditingThis && (
+                         <div style={{ display: 'flex', gap: '6px' }}>
+                           <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={cancelEdit}>
+                             Cancel
+                           </button>
+                           <button className="btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={() => executeEdit(item)} disabled={!!deletingId}>
+                             {deletingId ? "..." : "Save"}
+                           </button>
+                         </div>
+                      )}
+
                     </div>
-                    {item.type === "work" && (
+                    {item.type === "work" && !isEditingThis && (
                       <div className="tl-position-label">
                         {item.position === "only" && "only session"}
                         {item.position === "first" && "first session"}
@@ -476,36 +604,48 @@ export default function DayDetailModal({
                     )}
                   </div>
 
-                  {!item.isActive && (
-                    <button
-                      className={[
-                        "tl-delete-btn",
-                        isPendingThis ? "tl-delete-btn-pending" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      title={
-                        item.type === "break"
-                          ? "Remove break (merge surrounding sessions)"
-                          : "Delete this work session"
-                      }
-                      disabled={!!deletingId}
-                      onClick={() => {
-                        if (isPendingThis) setPendingDelete(null);
-                        else handleDeleteClick(item);
-                      }}
-                    >
-                      {isThisDeleting ? (
-                        <span
-                          className="spinner"
-                          style={{ width: 12, height: 12, borderWidth: 2 }}
-                        />
-                      ) : isPendingThis ? (
-                        <RiCloseLine size={16} />
-                      ) : (
-                        <RiDeleteBinLine size={16} />
-                      )}
-                    </button>
+                  {!item.isActive && !editingId && (
+                     <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
+                        {item.type === "work" && (
+                          <button
+                            className="tl-delete-btn"
+                            title="Edit this work session"
+                            disabled={!!deletingId}
+                            onClick={() => handleEditClick(item)}
+                          >
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Edit</span>
+                          </button>
+                        )}
+                        <button
+                          className={[
+                            "tl-delete-btn",
+                            isPendingThis ? "tl-delete-btn-pending" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          title={
+                            item.type === "break"
+                              ? "Remove break (merge surrounding sessions)"
+                              : "Delete this work session"
+                          }
+                          disabled={!!deletingId}
+                          onClick={() => {
+                            if (isPendingThis) setPendingDelete(null);
+                            else handleDeleteClick(item);
+                          }}
+                        >
+                          {isThisDeleting ? (
+                            <span
+                              className="spinner"
+                              style={{ width: 12, height: 12, borderWidth: 2 }}
+                            />
+                          ) : isPendingThis ? (
+                            <RiCloseLine size={16} />
+                          ) : (
+                            <RiDeleteBinLine size={16} />
+                          )}
+                        </button>
+                     </div>
                   )}
                 </div>
               );
@@ -516,8 +656,7 @@ export default function DayDetailModal({
         {/* Footer hint */}
         {timeline.length > 0 && !pendingDelete && !deletingId && (
           <p className="dm-footer-hint">
-            <RiDeleteBinLine size={14} /> Click the delete icon on any session
-            or break to remove it
+            <RiDeleteBinLine size={14} /> Click edit or delete to manage your sessions
           </p>
         )}
       </div>

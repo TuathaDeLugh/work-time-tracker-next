@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { RiShieldStarLine } from "@remixicon/react";
+import { vibeClient } from "@/lib/vibe-client";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -127,7 +128,17 @@ export default function Navbar() {
               <button
                 className="btn-danger"
                 style={{ flex: 1 }}
-                onClick={() => signOut()}
+                onClick={async () => {
+                  try {
+                    const email = session?.user?.email;
+                    if (vibeClient && email) {
+                      await vibeClient.unregisterDevice(email);
+                    }
+                  } catch (pushErr) {
+                    console.error("Failed to unregister push notifications:", pushErr);
+                  }
+                  signOut();
+                }}
               >
                 Yes, Sign Out
               </button>
