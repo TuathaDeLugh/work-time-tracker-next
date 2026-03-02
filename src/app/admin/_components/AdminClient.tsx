@@ -183,7 +183,6 @@ function PushNotificationsTab() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [targetUserId, setTargetUserId] = useState("all");
   const [message, setMessage] = useState("");
-  const [type, setType] = useState<"ONE_TIME" | "ALL_TIME">("ONE_TIME");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", text: "" });
 
@@ -206,7 +205,7 @@ function PushNotificationsTab() {
         fetch("/api/admin/notifications", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: uid, message, type }),
+          body: JSON.stringify({ userId: uid, message }),
         }),
       );
 
@@ -218,36 +217,6 @@ function PushNotificationsTab() {
       setMessage("");
     } catch {
       setStatus({ type: "error", text: "Failed to send notification." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to clear ALL past announcements for ALL users? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    setStatus({ type: "", text: "" });
-
-    try {
-      const res = await fetch("/api/admin/notifications", {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to clear");
-
-      setStatus({
-        type: "success",
-        text: "All past announcements have been cleared!",
-      });
-    } catch {
-      setStatus({ type: "error", text: "Failed to clear announcements." });
     } finally {
       setLoading(false);
     }
@@ -294,7 +263,7 @@ function PushNotificationsTab() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "1fr",
             gap: "20px",
             marginBottom: "20px",
           }}
@@ -329,39 +298,6 @@ function PushNotificationsTab() {
                   {u.name || u.email}
                 </option>
               ))}
-            </select>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label
-              style={{
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                color: "var(--text-main)",
-              }}
-            >
-              Notification Type
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "ONE_TIME" | "ALL_TIME")}
-              required
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "10px",
-                border: "1px solid var(--card-border)",
-                background: "var(--input-bg)",
-                color: "var(--text-main)",
-                fontSize: "0.95rem",
-              }}
-            >
-              <option value="ONE_TIME">
-                One-Time (Dismissible, fires Web Push)
-              </option>
-              <option value="ALL_TIME">
-                Persistent (Stays until dismissed explicitly)
-              </option>
             </select>
           </div>
         </div>
@@ -422,38 +358,6 @@ function PushNotificationsTab() {
           </button>
         </div>
       </form>
-
-      <div
-        style={{
-          marginTop: "40px",
-          paddingTop: "24px",
-          borderTop: "1px solid var(--card-border)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>
-            Danger Zone
-          </h3>
-          <p className="text-muted" style={{ fontSize: "0.85rem" }}>
-            Clear the entire notification history for all users.
-          </p>
-        </div>
-        <button
-          className="btn-secondary"
-          onClick={handleClearAll}
-          disabled={loading}
-          style={{
-            color: "var(--danger)",
-            borderColor: "rgba(229,77,77,0.3)",
-            padding: "10px 20px",
-          }}
-        >
-          {loading ? "Processing..." : "Clear All Announcements"}
-        </button>
-      </div>
     </div>
   );
 }

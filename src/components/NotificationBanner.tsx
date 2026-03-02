@@ -3,150 +3,57 @@
 import { useEffect, useState } from "react";
 import { RiNotification3Line, RiCloseLine } from "@remixicon/react";
 import { useSession } from "next-auth/react";
+import { vibeClient } from "@/lib/vibe-client";
 
 interface AppNotification {
   id: string;
   message: string;
-  type: "ONE_TIME" | "ALL_TIME";
-  isRead: boolean;
 }
 
 export default function NotificationBanner() {
-  const [persistentAnns, setPersistentAnns] = useState<AppNotification[]>([]);
   const [toasts, setToasts] = useState<AppNotification[]>([]);
   const { status } = useSession();
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("/api/notifications");
-      if (!res.ok) return;
-
-      const { notifications, notificationsEnabled } = await res.json();
-
-      const newAllTime = notifications.filter(
-        (n: AppNotification) => n.type === "ALL_TIME",
-      );
-      const newOneTime = notifications.filter(
-        (n: AppNotification) => n.type === "ONE_TIME",
-      );
-
-      setPersistentAnns(newAllTime);
-
-      if (newOneTime.length > 0) {
-        // Add to toasts
-        setToasts((prev) => [
-          ...prev,
-          ...newOneTime.filter(
-            (n: AppNotification) =>
-              !prev.find((p: AppNotification) => p.id === n.id),
-          ),
-        ]);
-
-        // Trigger desktop notifications if permitted, page is not in view, and user enabled them
-        if (
-          "Notification" in window &&
-          Notification.permission === "granted" &&
-          document.visibilityState !== "visible" &&
-          notificationsEnabled
-        ) {
-          newOneTime.forEach((n: AppNotification) => {
-            new Notification("WorkTracker Alert", { body: n.message });
-          });
-        }
-
-        // Mark them as read in the DB so they don't fetch again
-        await fetch("/api/notifications", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ids: newOneTime.map((n: AppNotification) => n.id),
-          }),
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    }
-  };
 
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
-    // Poll every 10 seconds for near-instant notifications
-    const interval = setInterval(fetchNotifications, 10000);
-    return () => clearInterval(interval);
+    if (vibeClient) {
+      vibeClient.onMessage((payload) => {
+        // Format payload to match our AppNotification type
+        const newToast: AppNotification = {
+          id: Date.now().toString(),
+          message: payload.body || payload.title,
+        };
+        
+        setToasts((prev) => [...prev, newToast]);
+
+        // Trigger desktop notifications if permitted, and page is not in view
+        if (
+          "Notification" in window &&
+          Notification.permission === "granted" &&
+          document.visibilityState !== "visible"
+        ) {
+          new Notification(payload.title || "WorkTracker Alert", { 
+            body: payload.body || payload.title 
+          });
+        }
+      });
+
+      vibeClient.onBackgroundMessage((payload) => {
+        // Handle when user clicks a background notification and it opens/focuses the app
+        console.log("Background Notification Clicked:", payload);
+      });
+    }
   }, [status]);
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const dismissPersistent = async (id: string) => {
-    // Optimistic UI update
-    setPersistentAnns((prev) =>
-      prev.filter((n: AppNotification) => n.id !== id),
-    );
-    // Update DB
-    await fetch("/api/notifications", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [id] }),
-    });
-  };
-
   if (status !== "authenticated") return null;
 
   return (
     <>
-      {/* Persistent Announcements at top of screen */}
-      {persistentAnns.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            zIndex: 50,
-          }}
-        >
-          {persistentAnns.map((ann) => (
-            <div
-              key={ann.id}
-              style={{
-                background: "var(--accent-primary)",
-                color: "white",
-                padding: "10px 20px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                fontSize: "0.9rem",
-                fontWeight: 500,
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <RiNotification3Line size={18} />
-                {ann.message}
-              </div>
-              <button
-                onClick={() => dismissPersistent(ann.id)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                  display: "flex",
-                  padding: "4px",
-                }}
-              >
-                <RiCloseLine size={20} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Stackable Toasts for ONE_TIME notifications (bottom right) */}
       {toasts.length > 0 && (
         <div
