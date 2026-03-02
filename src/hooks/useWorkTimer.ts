@@ -182,32 +182,9 @@ export function useWorkTimer(initialState: TimerState | null = null) {
         ) {
           setState((prev) => ({ ...prev, hasFiredOtNotification: true }));
 
-          fetch("/api/user/profile")
-            .then((res) => res.json())
-            .then((user) => {
-              if (
-                user?.notificationsEnabled !== false &&
-                "Notification" in window
-              ) {
-                if (Notification.permission === "granted") {
-                  new Notification("Workday Complete!", {
-                    body: "You have completed your target hours and are now entering Overtime.",
-                    icon: "/favicon.ico",
-                  });
-                } else if (Notification.permission !== "denied") {
-                  Notification.requestPermission().then((permission) => {
-                    if (permission === "granted") {
-                      new Notification("Workday Complete!", {
-                        body: "You have completed your target hours and are now entering Overtime.",
-                        icon: "/favicon.ico",
-                      });
-                    }
-                  });
-                }
-              }
-            })
+          fetch("/api/user/notify-overtime", { method: "POST" })
             .catch((err) =>
-              console.error("Error fetching notification preference:", err),
+              console.error("Error triggering overtime notification:", err),
             );
         }
       }, 1000);

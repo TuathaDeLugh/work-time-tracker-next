@@ -194,7 +194,7 @@
 }
 
 /* ── Password Field ── */
-.password-field-wrapper {
+.settings-container .password-field-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -202,7 +202,7 @@
   max-width: 320px;
 }
 
-.password-field-wrapper input {
+.settings-container .password-field-wrapper input {
   padding-right: 40px;
   width: 100%;
 }
